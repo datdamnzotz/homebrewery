@@ -15,11 +15,11 @@
 	--highlight: #bcbcbc;
 	color: #91A6AA;
 	background: var(--bg);
-	.CodeMirror-scroll {
-		.CodeMirror-gutters {
+	.cm-scroller {
+		.cm-gutters {
 			border-right: 1px solid #555;
 			background: var(--bg);
-			.CodeMirror-gutter {
+			.cm-gutter {
 				background-color: var(--bg);
 				&.CodeMirror-foldgutter {
 					cursor: pointer;
@@ -31,9 +31,9 @@
 				}
 			}
 		}
-		.CodeMirror-lines {
+		.cm-content {
 			/* Line numbers*/
-			.CodeMirror-linenumber.CodeMirror-gutter-elt {
+			.CodeMirror-linenumber.cm-gutter-elt {
 				background-color: var(--bg);
 				color: #81969A;
 			}

@@ -18,13 +18,13 @@
     }
 
     /* Line number stuff */
-    .CodeMirror-gutter-elt {
+    .cm-gutter-elt {
         color: #81969A;
     }
     .CodeMirror-linenumber {
         background-color: #0C0C0C;
     }
-    .CodeMirror-gutter {
+    .cm-gutter {
         background-color: #0C0C0C;
     }
 
