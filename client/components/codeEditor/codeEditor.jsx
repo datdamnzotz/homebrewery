@@ -1,17 +1,35 @@
-
-import './codeEditor.less';
+import "./codeEditor.less";
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 
 import { EditorState } from "@codemirror/state";
 import { defaultKeymap, history, historyField, undo, redo } from "@codemirror/commands";
 import { foldGutter, foldKeymap } from "@codemirror/language";
-import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine } from "@codemirror/view";
+import {
+	EditorView,
+	keymap,
+	lineNumbers,
+	highlightActiveLineGutter,
+	highlightActiveLine,
+	scrollPastEnd,
+} from "@codemirror/view";
 import { markdown } from "@codemirror/lang-markdown";
 import { css } from "@codemirror/lang-css";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { basicLightTheme } from "cm6-theme-basic-light";
 
 const CodeEditor = forwardRef(
-	({ value = "", onChange = () => {}, language, editorTheme, tab, view, style, ...props }, ref) => {
+	(
+		{
+			value = "",
+			onChange = () => {},
+			language = "",
+			tab = "brewText",
+			editorTheme = "default",
+			view,
+			style,
+			...props
+		},
+		ref,
+	) => {
 		const editorRef = useRef(null);
 		const viewRef = useRef(null);
 
@@ -76,13 +94,16 @@ const CodeEditor = forwardRef(
 					keymap.of(defaultKeymap),
 					customKeymap,
 					updateListener,
+					EditorView.lineWrapping,
+					scrollPastEnd(),
 					languageExtension(),
 					highlightActiveLine(),
 					highlightActiveLineGutter(),
 					keymap.of(foldKeymap),
 					foldGutter(),
 					lineNumbers(),
-					oneDark,
+					basicLightTheme,
+					bracketMatching(),
 				],
 			});
 
