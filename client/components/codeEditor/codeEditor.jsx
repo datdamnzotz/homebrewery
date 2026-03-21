@@ -1,3 +1,5 @@
+
+import './codeEditor.less';
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 
 import { EditorState } from "@codemirror/state";
