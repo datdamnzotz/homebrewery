@@ -1,490 +1,143 @@
-/* eslint-disable max-lines */
-import './codeEditor.less';
-import React from 'react';
-import createReactClass from 'create-react-class';
-import _ from 'lodash';
-import closeTag from './close-tag';
-import autoCompleteEmoji from './autocompleteEmoji';
-let CodeMirror;
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 
-const CodeEditor = createReactClass({
-	displayName     : 'CodeEditor',
-	getDefaultProps : function() {
-		return {
-			language      : '',
-			tab           : 'brewText',
-			value         : '',
-			wrap          : true,
-			onChange      : ()=>{},
-			enableFolding : true,
-			editorTheme   : 'default'
-		};
-	},
+import { EditorState } from "@codemirror/state";
+import { defaultKeymap, history, historyField, undo, redo } from "@codemirror/commands";
+import { foldGutter, foldKeymap } from "@codemirror/language";
+import { EditorView, keymap, lineNumbers, highlightActiveLineGutter, highlightActiveLine } from "@codemirror/view";
+import { markdown } from "@codemirror/lang-markdown";
+import { css } from "@codemirror/lang-css";
 
-	getInitialState : function() {
-		return {
-			docs : {}
-		};
-	},
+const CodeEditor = forwardRef(({ value = "", onChange = () => {} }, ref) => {
+	const editorRef = useRef(null);
+	const viewRef = useRef(null);
 
-	editor : React.createRef(null),
+	// --- init editor ---
+	useEffect(() => {
+		if (!editorRef.current) return;
 
-	async componentDidMount() {
-		CodeMirror = (await import('codemirror')).default;
-		this.CodeMirror = CodeMirror;
-
-		await import('codemirror/mode/gfm/gfm.js');
-		await import('codemirror/mode/css/css.js');
-		await import('codemirror/mode/javascript/javascript.js');
-
-		// addons
-		await import('codemirror/addon/fold/foldcode.js');
-		await import('codemirror/addon/fold/foldgutter.js');
-		await import('codemirror/addon/fold/xml-fold.js');
-		await import('codemirror/addon/search/search.js');
-		await import('codemirror/addon/search/searchcursor.js');
-		await import('codemirror/addon/search/jump-to-line.js');
-		await import('codemirror/addon/search/match-highlighter.js');
-		await import('codemirror/addon/search/matchesonscrollbar.js');
-		await import('codemirror/addon/dialog/dialog.js');
-		await import('codemirror/addon/scroll/scrollpastend.js');
-		await import('codemirror/addon/edit/closetag.js');
-		await import('codemirror/addon/hint/show-hint.js');
-		// import 'codemirror/addon/selection/active-line.js';
-		// import 'codemirror/addon/edit/trailingspace.js';
-
-
-		// register helpers dynamically as well
-		const foldPagesCode = (await import('./fold-pages')).default;
-		const foldCSSCode   = (await import('./fold-css')).default;
-		foldPagesCode.registerHomebreweryHelper(CodeMirror);
-		foldCSSCode.registerHomebreweryHelper(CodeMirror);
-
-		this.buildEditor();
-		const newDoc = CodeMirror?.Doc(this.props.value, this.props.language);
-		this.codeMirror?.swapDoc(newDoc);
-	},
-
-
-	componentDidUpdate : function(prevProps) {
-		if(prevProps.view !== this.props.view){ //view changed; swap documents
-			let newDoc;
-
-			if(!this.state.docs[this.props.view]) {
-				newDoc = CodeMirror?.Doc(this.props.value, this.props.language);
-			} else {
-				newDoc = this.state.docs[this.props.view];
+		const updateListener = EditorView.updateListener.of((update) => {
+			if (update.docChanged) {
+				onChange(update.state.doc.toString());
 			}
-
-			const oldDoc = { [prevProps.view]: this.codeMirror?.swapDoc(newDoc) };
-
-			this.setState((prevState)=>({
-				docs : _.merge({}, prevState.docs, oldDoc)
-			}));
-
-			this.props.rerenderParent();
-		} else if(this.codeMirror?.getValue() != this.props.value) { //update editor contents if brew.text is changed from outside
-			this.codeMirror?.setValue(this.props.value);
-		}
-
-		if(this.props.enableFolding) {
-			this.codeMirror?.setOption('foldOptions', this.foldOptions(this.codeMirror));
-		} else {
-			this.codeMirror?.setOption('foldOptions', false);
-		}
-
-		if(prevProps.editorTheme !== this.props.editorTheme){
-			this.codeMirror?.setOption('theme', this.props.editorTheme);
-		}
-	},
-
-	buildEditor : function() {
-		this.codeMirror = CodeMirror(this.editor.current, {
-			lineNumbers       : true,
-			lineWrapping      : this.props.wrap,
-			indentWithTabs    : false,
-			tabSize           : 2,
-			smartIndent       : false,
-			historyEventDelay : 250,
-			scrollPastEnd     : true,
-			extraKeys         : {
-				'Tab'              : this.indent,
-				'Shift-Tab'        : this.dedent,
-				'Ctrl-B'           : this.makeBold,
-				'Cmd-B'            : this.makeBold,
-				'Shift-Ctrl-='     : this.makeSuper,
-				'Shift-Cmd-='      : this.makeSuper,
-				'Ctrl-='           : this.makeSub,
-				'Cmd-='            : this.makeSub,
-				'Ctrl-I'           : this.makeItalic,
-				'Cmd-I'            : this.makeItalic,
-				'Ctrl-U'           : this.makeUnderline,
-				'Cmd-U'            : this.makeUnderline,
-				'Ctrl-.'           : this.makeNbsp,
-				'Cmd-.'            : this.makeNbsp,
-				'Shift-Ctrl-.'     : this.makeSpace,
-				'Shift-Cmd-.'      : this.makeSpace,
-				'Shift-Ctrl-,'     : this.removeSpace,
-				'Shift-Cmd-,'      : this.removeSpace,
-				'Ctrl-M'           : this.makeSpan,
-				'Cmd-M'            : this.makeSpan,
-				'Shift-Ctrl-M'     : this.makeDiv,
-				'Shift-Cmd-M'      : this.makeDiv,
-				'Ctrl-/'           : this.makeComment,
-				'Cmd-/'            : this.makeComment,
-				'Ctrl-K'           : this.makeLink,
-				'Cmd-K'            : this.makeLink,
-				'Ctrl-L'           : ()=>this.makeList('UL'),
-				'Cmd-L'            : ()=>this.makeList('UL'),
-				'Shift-Ctrl-L'     : ()=>this.makeList('OL'),
-				'Shift-Cmd-L'      : ()=>this.makeList('OL'),
-				'Shift-Ctrl-1'     : ()=>this.makeHeader(1),
-				'Shift-Ctrl-2'     : ()=>this.makeHeader(2),
-				'Shift-Ctrl-3'     : ()=>this.makeHeader(3),
-				'Shift-Ctrl-4'     : ()=>this.makeHeader(4),
-				'Shift-Ctrl-5'     : ()=>this.makeHeader(5),
-				'Shift-Ctrl-6'     : ()=>this.makeHeader(6),
-				'Shift-Cmd-1'      : ()=>this.makeHeader(1),
-				'Shift-Cmd-2'      : ()=>this.makeHeader(2),
-				'Shift-Cmd-3'      : ()=>this.makeHeader(3),
-				'Shift-Cmd-4'      : ()=>this.makeHeader(4),
-				'Shift-Cmd-5'      : ()=>this.makeHeader(5),
-				'Shift-Cmd-6'      : ()=>this.makeHeader(6),
-				'Shift-Ctrl-Enter' : this.newColumn,
-				'Shift-Cmd-Enter'  : this.newColumn,
-				'Ctrl-Enter'       : this.newPage,
-				'Cmd-Enter'        : this.newPage,
-				'Ctrl-F'           : 'findPersistent',
-				'Cmd-F'            : 'findPersistent',
-				'Shift-Enter'      : 'findPersistentPrevious',
-				'Ctrl-['           : this.foldAllCode,
-				'Cmd-['            : this.foldAllCode,
-				'Ctrl-]'           : this.unfoldAllCode,
-				'Cmd-]'            : this.unfoldAllCode
-			},
-			foldGutter        : true,
-			foldOptions       : this.foldOptions(this.codeMirror),
-			gutters           : ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-			autoCloseTags     : true,
-			styleActiveLine   : true,
-			showTrailingSpace : false,
-			theme             : this.props.editorTheme
-			// specialChars           : / /,
-			// specialCharPlaceholder : function(char) {
-			// 	const el = document.createElement('span');
-			// 	el.className = 'cm-space';
-			// 	el.innerHTML = ' ';
-			// 	return el;
-			// }
 		});
 
-		// Add custom behaviors (auto-close curlies and auto-complete emojis)
-		closeTag.autoCloseCurlyBraces(CodeMirror, this.codeMirror);
-		autoCompleteEmoji.showAutocompleteEmoji(CodeMirror, this.codeMirror);
+		const boldCommand = (view) => {
+			const { from, to } = view.state.selection.main;
+			const selected = view.state.doc.sliceString(from, to);
+			const text = `**${selected}**`;
 
-		// Note: codeMirror passes a copy of itself in this callback. cm === this.codeMirror?. Either one works.
-		this.codeMirror?.on('change', (cm)=>{this.props.onChange(cm.getValue());});
-		this.updateSize();
-	},
+			view.dispatch({
+				changes: { from, to, insert: text },
+				selection: { anchor: from + text.length },
+			});
 
-	// Use for GFM tabs that use common hot-keys
-	isGFM : function() {
-		if((this.isGFM()) || (this.props.tab === 'brewSnippets')) return true;
-		return false;
-	},
-
-	isBrewText : function() {
-		if(this.isGFM()) return true;
-		return false;
-	},
-
-	isBrewSnippets : function() {
-		if(this.props.tab === 'brewSnippets') return true;
-		return false;
-	},
-
-	indent : function () {
-		const cm = this.codeMirror;
-		if(cm.somethingSelected()) {
-			cm.execCommand('indentMore');
-		} else {
-			cm.execCommand('insertSoftTab');
-		}
-	},
-
-	dedent : function () {
-		this.codeMirror?.execCommand('indentLess');
-	},
-
-	makeHeader : function (number) {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror?.getSelection();
-		const header = Array(number).fill('#').join('');
-		this.codeMirror?.replaceSelection(`${header} ${selection}`, 'around');
-		const cursor = this.codeMirror?.getCursor();
-		this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch + selection.length + number + 1 });
-	},
-
-	makeBold : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror?.getSelection(), t = selection.slice(0, 2) === '**' && selection.slice(-2) === '**';
-		this.codeMirror?.replaceSelection(t ? selection.slice(2, -2) : `**${selection}**`, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch - 2 });
-		}
-	},
-
-	makeItalic : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror.getSelection(), t = selection.slice(0, 1) === '*' && selection.slice(-1) === '*';
-		this.codeMirror?.replaceSelection(t ? selection.slice(1, -1) : `*${selection}*`, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch - 1 });
-		}
-	},
-
-	makeSuper : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror.getSelection(), t = selection.slice(0, 1) === '^' && selection.slice(-1) === '^';
-		this.codeMirror?.replaceSelection(t ? selection.slice(1, -1) : `^${selection}^`, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch - 1 });
-		}
-	},
-
-	makeSub : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror.getSelection(), t = selection.slice(0, 2) === '^^' && selection.slice(-2) === '^^';
-		this.codeMirror?.replaceSelection(t ? selection.slice(2, -2) : `^^${selection}^^`, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch - 2 });
-		}
-	},
-
-
-	makeNbsp : function() {
-		if(!this.isGFM()) return;
-		this.codeMirror?.replaceSelection('&nbsp;', 'end');
-	},
-
-	makeSpace : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror?.getSelection();
-		const t = selection.slice(0, 8) === '{{width:' && selection.slice(0 -4) === '% }}';
-		if(t){
-			const percent = parseInt(selection.slice(8, -4)) + 10;
-			this.codeMirror?.replaceSelection(percent < 90 ? `{{width:${percent}% }}` : '{{width:100% }}', 'around');
-		} else {
-			this.codeMirror?.replaceSelection(`{{width:10% }}`, 'around');
-		}
-	},
-
-	removeSpace : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror?.getSelection();
-		const t = selection.slice(0, 8) === '{{width:' && selection.slice(0 -4) === '% }}';
-		if(t){
-			const percent = parseInt(selection.slice(8, -4)) - 10;
-			this.codeMirror?.replaceSelection(percent > 10 ? `{{width:${percent}% }}` : '', 'around');
-		}
-	},
-
-	newColumn : function() {
-		if(!this.isGFM()) return;
-		this.codeMirror?.replaceSelection('\n\\column\n\n', 'end');
-	},
-
-	newPage : function() {
-		if(!this.isGFM()) return;
-		this.codeMirror?.replaceSelection('\n\\page\n\n', 'end');
-	},
-
-	injectText : function(injectText, overwrite=true) {
-		const cm = this.codeMirror;
-		if(!overwrite) {
-			cm.setCursor(cm.getCursor('from'));
-		}
-		cm.replaceSelection(injectText, 'end');
-		cm.focus();
-	},
-
-	makeUnderline : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror.getSelection(), t = selection.slice(0, 3) === '<u>' && selection.slice(-4) === '</u>';
-		this.codeMirror?.replaceSelection(t ? selection.slice(3, -4) : `<u>${selection}</u>`, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch - 4 });
-		}
-	},
-
-	makeSpan : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror.getSelection(), t = selection.slice(0, 2) === '{{' && selection.slice(-2) === '}}';
-		this.codeMirror?.replaceSelection(t ? selection.slice(2, -2) : `{{ ${selection}}}`, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch - 2 });
-		}
-	},
-
-	makeDiv : function() {
-		if(!this.isGFM()) return;
-		const selection = this.codeMirror.getSelection(), t = selection.slice(0, 2) === '{{' && selection.slice(-2) === '}}';
-		this.codeMirror?.replaceSelection(t ? selection.slice(2, -2) : `{{\n${selection}\n}}`, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line - 1, ch: cursor.ch });  // set to -2? if wanting to enter classes etc.  if so, get rid of first \n when replacing selection
-		}
-	},
-
-	makeComment : function() {
-		let regex;
-		let cursorPos;
-		let newComment;
-		const selection = this.codeMirror?.getSelection();
-		if(this.isGFM()){
-			regex = /^\s*(<!--\s?)(.*?)(\s?-->)\s*$/gs;
-			cursorPos = 4;
-			newComment = `<!-- ${selection} -->`;
-		} else {
-			regex = /^\s*(\/\*\s?)(.*?)(\s?\*\/)\s*$/gs;
-			cursorPos = 3;
-			newComment = `/* ${selection} */`;
-		}
-		this.codeMirror?.replaceSelection(regex.test(selection) == true ? selection.replace(regex, '$2') : newComment, 'around');
-		if(selection.length === 0){
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setCursor({ line: cursor.line, ch: cursor.ch - cursorPos });
+			return true;
 		};
-	},
 
-	makeLink : function() {
-		if(!this.isGFM()) return;
-		const isLink = /^\[(.*)\]\((.*)\)$/;
-		const selection = this.codeMirror?.getSelection().trim();
-		let match;
-		if(match = isLink.exec(selection)){
-			const altText = match[1];
-			const url     = match[2];
-			this.codeMirror?.replaceSelection(`${altText} ${url}`);
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setSelection({ line: cursor.line, ch: cursor.ch - url.length }, { line: cursor.line, ch: cursor.ch });
-		} else {
-			this.codeMirror?.replaceSelection(`[${selection || 'alt text'}](url)`);
-			const cursor = this.codeMirror?.getCursor();
-			this.codeMirror?.setSelection({ line: cursor.line, ch: cursor.ch - 4 }, { line: cursor.line, ch: cursor.ch - 1 });
-		}
-	},
+		const italicCommand = (view) => {
+			const { from, to } = view.state.selection.main;
+			const selected = view.state.doc.sliceString(from, to);
+			const text = `*${selected}*`;
 
-	makeList : function(listType) {
-		if(!this.isGFM()) return;
-		const selectionStart = this.codeMirror.getCursor('from'), selectionEnd = this.codeMirror.getCursor('to');
-		this.codeMirror?.setSelection(
-			{ line: selectionStart.line, ch: 0 },
-			{ line: selectionEnd.line, ch: this.codeMirror?.getLine(selectionEnd.line).length }
-		);
-		const newSelection = this.codeMirror?.getSelection();
+			view.dispatch({
+				changes: { from, to, insert: text },
+				selection: { anchor: from + text.length },
+			});
 
-		const regex = /^\d+\.\s|^-\s/gm;
-		if(newSelection.match(regex) != null){   	// if selection IS A LIST
-			this.codeMirror?.replaceSelection(newSelection.replace(regex, ''), 'around');
-		} else {									// if selection IS NOT A LIST
-			listType == 'UL' ? this.codeMirror?.replaceSelection(newSelection.replace(/^/gm, `- `), 'around') :
-				this.codeMirror?.replaceSelection(newSelection.replace(/^/gm, (()=>{
-					let n = 1;
-					return ()=>{
-						return `${n++}. `;
-					};
-				})()), 'around');
-		}
-	},
-
-	foldAllCode : function() {
-		this.codeMirror?.execCommand('foldAll');
-	},
-
-	unfoldAllCode : function() {
-		this.codeMirror?.execCommand('unfoldAll');
-	},
-
-	//=-- Externally used -==//
-	setCursorPosition : function(line, char){
-		setTimeout(()=>{
-			this.codeMirror?.focus();
-			this.codeMirror?.doc.setCursor(line, char);
-		}, 10);
-	},
-	getCursorPosition : function(){
-		return this.codeMirror?.getCursor();
-	},
-	getTopVisibleLine : function(){
-		const rect = this.codeMirror?.getWrapperElement().getBoundingClientRect();
-		const topVisibleLine = this.codeMirror?.lineAtHeight(rect.top, 'window');
-		return topVisibleLine;
-	},
-	updateSize : function(){
-		this.codeMirror?.refresh();
-	},
-	redo : function(){
-		return this.codeMirror?.redo();
-	},
-	undo : function(){
-		return this.codeMirror?.undo();
-	},
-	historySize : function(){
-		return this.codeMirror?.doc.historySize();
-	},
-
-	foldOptions : function(cm){
-		return {
-			scanUp      : true,
-			rangeFinder : this.props.language === 'css' ? CodeMirror.fold.homebrewerycss : CodeMirror.fold.homebrewery,
-			widget      : (from, to)=>{
-				let text = '';
-				let currentLine = from.line;
-				let maxLength = 50;
-
-				let foldPreviewText = '';
-				while (currentLine <= to.line && text.length <= maxLength) {
-					const currentText = this.codeMirror?.getLine(currentLine);
-					currentLine++;
-					if(currentText[0] == '#'){
-						foldPreviewText = currentText;
-						break;
-					}
-					if(!foldPreviewText && currentText != '\n') {
-						foldPreviewText = currentText;
-					}
-				}
-				text = foldPreviewText || `Lines ${from.line+1}-${to.line+1}`;
-				text = text.replace('{', '').trim();
-
-				// Truncate data URLs at `data:`
-				const startOfData = text.indexOf('data:');
-				if(startOfData > 0)
-					maxLength = Math.min(startOfData + 5, maxLength);
-
-				if(text.length > maxLength)
-					text = `${text.slice(0, maxLength)}...`;
-
-				return `\u21A4 ${text} \u21A6`;
-			}
+			return true;
 		};
-	},
-	//----------------------//
 
-	render : function(){
-		return <>
-			<link href={`../homebrew/cm-themes/${this.props.editorTheme}.css`} type='text/css' rel='stylesheet' />
-			<div className='codeEditor' ref={this.editor} style={this.props.style}/>
-		</>;
-	}
+		const customKeymap = keymap.of([
+			{ key: "Mod-b", run: boldCommand },
+			{ key: "Mod-i", run: italicCommand },
+		]);
+
+		const state = EditorState.create({
+			doc: value,
+			extensions: [
+				history(),
+				keymap.of(defaultKeymap),
+				customKeymap,
+				updateListener,
+				markdown(),
+				css(),
+				highlightActiveLine(),
+				highlightActiveLineGutter(),
+				keymap.of(foldKeymap),
+				foldGutter(),
+				lineNumbers(),
+			
+			],
+		});
+
+		viewRef.current = new EditorView({
+			state,
+			parent: editorRef.current,
+		});
+
+		return () => viewRef.current?.destroy();
+	}, []);
+
+	// --- sync external value ---
+	useEffect(() => {
+		const view = viewRef.current;
+		if (!view) return;
+
+		const current = view.state.doc.toString();
+		if (value !== current) {
+			view.dispatch({
+				changes: { from: 0, to: current.length, insert: value },
+			});
+		}
+	}, [value]);
+
+	// --- exposed API ---
+	useImperativeHandle(ref, () => ({
+		getValue: () => viewRef.current.state.doc.toString(),
+
+		setValue: (text) => {
+			const view = viewRef.current;
+			view.dispatch({
+				changes: { from: 0, to: view.state.doc.length, insert: text },
+			});
+		},
+
+		injectText: (text) => {
+			const view = viewRef.current;
+			const { from, to } = view.state.selection.main;
+
+			view.dispatch({
+				changes: { from, to, insert: text },
+				selection: { anchor: from + text.length },
+			});
+
+			view.focus();
+		},
+
+		getCursorPosition: () => viewRef.current.state.selection.main.head,
+
+		setCursorPosition: (pos) => {
+			viewRef.current.dispatch({ selection: { anchor: pos } });
+			viewRef.current.focus();
+		},
+
+		undo: () => undo(viewRef.current),
+		redo: () => redo(viewRef.current),
+
+		historySize: () => {
+			const view = viewRef.current;
+			if (!view) return { done: 0, undone: 0 };
+
+			const h = view.state.field(historyField, false);
+			if (!h) return { done: 0, undone: 0 };
+
+			return { done: h.done.length, undone: h.undone.length };
+		},
+
+		focus: () => viewRef.current.focus(),
+	}));
+
+	return <div ref={editorRef} style={{ height: "100%" }} />;
 });
 
 export default CodeEditor;
-
