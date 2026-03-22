@@ -103,7 +103,6 @@ const CodeEditor = forwardRef(
 					foldGutter(),
 					lineNumbers(),
 					basicLightTheme,
-					bracketMatching(),
 				],
 			});
 
