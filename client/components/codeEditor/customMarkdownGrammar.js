@@ -36,9 +36,37 @@ export function tokenizeCustomMarkdown(text) {
 		if (/:\w+?:/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.emoji });
 
 		// --- Superscript / Subscript ---
-		if (/\^\^/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.subscript });
-		if (/\^/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.superscript });
+		if (/\^/.test(lineText)) {
+			let startIndex = lineText.indexOf("^");
+			const superRegex = /\^(?!\s)(?=([^\n\^]*[^\s\^]))\1\^/gy;
+			const subRegex = /\^\^(?!\s)(?=([^\n\^]*[^\s\^]))\1\^\^/gy;
 
+			while (startIndex >= 0) {
+				superRegex.lastIndex = subRegex.lastIndex = startIndex;
+
+				let match = subRegex.exec(lineText);
+				let type = customTags.subscript;
+
+				if (!match) {
+					match = superRegex.exec(lineText);
+					type = customTags.superscript;
+				}
+
+				if (match) {
+					tokens.push({
+						line: lineNumber,
+						type,
+						from: match.index,
+						to: match.index + match[0].length,
+					});
+				}
+
+				startIndex = lineText.indexOf(
+					"^",
+					Math.max(startIndex + 1, superRegex.lastIndex || 0, subRegex.lastIndex || 0),
+				);
+			}
+		};
 		// --- Definition lists ---
 		if (/::/.test(lineText)) {
 			tokens.push({ line: lineNumber, type: customTags.definitionDesc });
@@ -78,8 +106,6 @@ export function tokenizeCustomMarkdown(text) {
 			tokens.push({ line: lineNumber, type: customTags.block });
 			inBlock = false;
 		}
-
-
 	});
 
 	return tokens;

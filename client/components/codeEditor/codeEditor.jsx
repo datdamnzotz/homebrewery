@@ -64,18 +64,30 @@ const customHighlightPlugin = ViewPlugin.fromClass(
 			}
 		}
 		buildDecorations(view) {
-			const widgets = [];
+			const decos = [];
 			const tokens = tokenizeCustomMarkdown(view.state.doc.toString());
 
-			// sort by line number
-			tokens.sort((a, b) => a.line - b.line);
-
 			tokens.forEach((tok) => {
-				const line = view.state.doc.line(tok.line + 1); // CM lines are 1-based
-				widgets.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
+				const line = view.state.doc.line(tok.line + 1);
+
+				if (tok.from != null && tok.to != null) {
+					decos.push({
+						from: line.from + tok.from,
+						to: line.from + tok.to,
+						deco: Decoration.mark({ class: `cm-${tok.type}` }),
+					});
+				} else {
+					decos.push({
+						from: line.from,
+						to: line.from,
+						deco: Decoration.line({ class: `cm-${tok.type}` }),
+					});
+				}
 			});
 
-			return Decoration.set(widgets);
+			decos.sort((a, b) => a.from - b.from || a.to - b.to);
+
+			return Decoration.set(decos.map((d) => d.deco.range(d.from, d.to)));
 		}
 	},
 	{
