@@ -1,0 +1,95 @@
+// customMarkdownGrammar.js
+
+// --- Custom tags with CM6-compatible class names ---
+export const customTags = {
+	pageLine: "pageLine", // .cm-pageLine
+	snippetLine: "snippetLine", // .cm-snippetLine
+	columnSplit: "columnSplit", // .cm-columnSplit
+	snippetBreak: "snippetBreak", // .cm-snippetBreak
+	inlineBlock: "inline-block", // .cm-inline-block
+	block: "block", // .cm-block
+	emoji: "emoji", // .cm-emoji
+	superscript: "superscript", // .cm-superscript
+	subscript: "subscript", // .cm-subscript
+	definitionTerm: "dt-highlight", // .cm-dt-highlight
+	definitionDesc: "dd-highlight", // .cm-dd-highlight
+	injection: "injection", // .cm-injection
+};
+
+// --- Tokenizer function ---
+export function tokenizeCustomMarkdown(text) {
+	const tokens = [];
+	const lines = text.split("\n");
+
+	// Track multi-line blocks
+	let inBlock = false;
+	let blockStart = 0;
+
+	lines.forEach((lineText, lineNumber) => {
+		// --- Page / snippet lines ---
+		if (/\\page/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.pageLine });
+		if (/\\snippet/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetLine });
+		if (/^\\column(?:break)?$/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.columnSplit });
+		if (/\\snippet/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetBreak });
+
+		// --- Emoji ---
+		if (/:\w+?:/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.emoji });
+
+		// --- Superscript / Subscript ---
+		if (/\^\^/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.subscript });
+		if (/\^/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.superscript });
+
+		// --- Definition lists ---
+		if (/::/.test(lineText)) {
+			tokens.push({ line: lineNumber, type: customTags.definitionDesc });
+			tokens.push({ line: lineNumber, type: customTags.definitionTerm });
+		}
+
+		// Track ranges already marked for injections
+		const injectionRanges = [];
+
+		if (line.includes("{") && line.includes("}")) {
+			const regex = /{[^{}]*}/gm;
+			let match;
+			while ((match = regex.exec(line)) != null) {
+				codeMirror?.markText(
+					{ line: lineNumber, ch: match.index },
+					{ line: lineNumber, ch: match.index + match[0].length },
+					{ className: "injection" },
+				);
+				injectionRanges.push([match.index, match.index + match[0].length]);
+			}
+		}
+
+		// Now mark inline blocks, but skip overlapping injection ranges
+		if (line.includes("{{") && line.includes("}}")) {
+			const regex = /{{[^{}]*}}/gm;
+			let match;
+			while ((match = regex.exec(line)) != null) {
+				const start = match.index,
+					end = match.index + match[0].length;
+				const overlaps = injectionRanges.some(([iStart, iEnd]) => start < iEnd && end > iStart);
+				if (!overlaps) {
+					codeMirror?.markText(
+						{ line: lineNumber, ch: start },
+						{ line: lineNumber, ch: end },
+						{ className: "inline-block" },
+					);
+				}
+			}
+		}
+
+		// --- Multi-line blocks `{{…}}` --- only start/end lines
+		if (lineText.trimLeft().startsWith("{{") && !lineText.trimLeft().endsWith("}}")) {
+			inBlock = true;
+			blockStart = lineNumber;
+			tokens.push({ line: lineNumber, type: customTags.block });
+		}
+		if (lineText.trimLeft().startsWith("}}") && inBlock) {
+			tokens.push({ line: lineNumber, type: customTags.block });
+			inBlock = false;
+		}
+	});
+
+	return tokens;
+}

@@ -36,6 +36,53 @@ const highlightStyle = HighlightStyle.define([
 	// …
 ]);
 
+/*custom tokens */
+import { Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
+import { tokenizeCustomMarkdown, customTags } from "./customMarkdownGrammar.js";
+
+const customHighlightStyle = HighlightStyle.define([
+	{ tag: tags.heading1, color: "#000", fontWeight: "700" },
+	{ tag: tags.keyword, color: "#07a" }, // example for your markdown headings
+	{ tag: customTags.pageLine, color: "#f0a" },
+	{ tag: customTags.snippetBreak, class: "cm-snippet-break", color: "#0af" },
+	{ tag: customTags.inlineBlock, class: "cm-inline-block", backgroundColor: "#fffae6" },
+	{ tag: customTags.emoji, class: "cm-emoji", color: "#fa0" },
+	{ tag: customTags.superscript, class: "cm-superscript", verticalAlign: "super", fontSize: "0.8em" },
+	{ tag: customTags.subscript, class: "cm-subscript", verticalAlign: "sub", fontSize: "0.8em" },
+	{ tag: customTags.definitionTerm, class: "cm-dt", fontWeight: "bold", color: "#0a0" },
+	{ tag: customTags.definitionDesc, class: "cm-dd", color: "#070" },
+]);
+
+const customHighlightPlugin = ViewPlugin.fromClass(
+	class {
+		constructor(view) {
+			this.decorations = this.buildDecorations(view);
+		}
+		update(update) {
+			if (update.docChanged) {
+				this.decorations = this.buildDecorations(update.view);
+			}
+		}
+		buildDecorations(view) {
+			const widgets = [];
+			const tokens = tokenizeCustomMarkdown(view.state.doc.toString());
+
+			// sort by line number
+			tokens.sort((a, b) => a.line - b.line);
+
+			tokens.forEach((tok) => {
+				const line = view.state.doc.line(tok.line + 1); // CM lines are 1-based
+				widgets.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
+			});
+
+			return Decoration.set(widgets);
+		}
+	},
+	{
+		decorations: (v) => v.decorations,
+	},
+);
+
 const CodeEditor = forwardRef(
 	(
 		{
@@ -116,6 +163,8 @@ const CodeEditor = forwardRef(
 				lineNumbers(),
 				themeExtension,
 				syntaxHighlighting(highlightStyle),
+				customHighlightPlugin,
+				syntaxHighlighting(customHighlightStyle),
 			];
 		};
 
