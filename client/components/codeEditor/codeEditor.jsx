@@ -12,9 +12,29 @@ import {
 	highlightActiveLine,
 	scrollPastEnd,
 } from "@codemirror/view";
-import { markdown } from "@codemirror/lang-markdown";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
 import { css } from "@codemirror/lang-css";
-import { basicLightTheme } from "cm6-theme-basic-light";
+import { basicLightHighlightStyle } from "cm6-theme-basic-light";
+import { HighlightStyle } from "@codemirror/language";
+
+import { syntaxHighlighting } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
+
+const highlightStyle = HighlightStyle.define([
+	{
+		tag: tags.heading1,
+		color: "black",
+		fontSize: "1.75em",
+		fontWeight: "700",
+		class: "cm-header cm-header-1",
+	},
+	{
+		tag: tags.processingInstruction,
+		color: "blue",
+	},
+	// …
+]);
 
 const CodeEditor = forwardRef(
 	(
@@ -32,13 +52,13 @@ const CodeEditor = forwardRef(
 	) => {
 		const editorRef = useRef(null);
 		const viewRef = useRef(null);
+		const docsRef = useRef({});
+		const prevTabRef = useRef(tab);
 
 		console.log(props);
 
 		// --- init editor ---
-		useEffect(() => {
-			if (!editorRef.current) return;
-
+		const createExtensions = ({ onChange, language, editorTheme }) => {
 			const updateListener = EditorView.updateListener.of((update) => {
 				if (update.docChanged) {
 					onChange(update.state.doc.toString());
@@ -76,34 +96,36 @@ const CodeEditor = forwardRef(
 				{ key: "Mod-i", run: italicCommand },
 			]);
 
-			const languageExtension = () => {
-				switch (language) {
-					case "gfm":
-						return markdown({ codeLanguages: [] }); // GitHub-flavored Markdown
-					case "css":
-						return css();
-					default:
-						return markdown();
-				}
-			};
+			const languageExtension =
+				language === "css" ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
 
+			const themeExtension = syntaxHighlighting(basicLightHighlightStyle);
+
+			return [
+				history(),
+				keymap.of(defaultKeymap),
+				customKeymap,
+				updateListener,
+				EditorView.lineWrapping,
+				scrollPastEnd(),
+				languageExtension,
+				highlightActiveLine(),
+				highlightActiveLineGutter(),
+				keymap.of(foldKeymap),
+				foldGutter(),
+				lineNumbers(),
+				themeExtension,
+				syntaxHighlighting(highlightStyle),
+			];
+		};
+
+		useEffect(() => {
+			if (!editorRef.current) return;
+
+			// create initial editor state
 			const state = EditorState.create({
 				doc: value,
-				extensions: [
-					history(),
-					keymap.of(defaultKeymap),
-					customKeymap,
-					updateListener,
-					EditorView.lineWrapping,
-					scrollPastEnd(),
-					languageExtension(),
-					highlightActiveLine(),
-					highlightActiveLineGutter(),
-					keymap.of(foldKeymap),
-					foldGutter(),
-					lineNumbers(),
-					basicLightTheme,
-				],
+				extensions: createExtensions({ onChange, language, editorTheme }),
 			});
 
 			viewRef.current = new EditorView({
@@ -111,10 +133,37 @@ const CodeEditor = forwardRef(
 				parent: editorRef.current,
 			});
 
+			// save initial state for current tab
+			docsRef.current[tab] = state;
+
 			return () => viewRef.current?.destroy();
 		}, []);
 
-		// --- sync external value ---
+		useEffect(() => {
+			const view = viewRef.current;
+			if (!view) return;
+
+			const prevTab = prevTabRef.current;
+
+			if (prevTab !== tab) {
+				// save current state
+				docsRef.current[prevTab] = view.state;
+
+				// restore or create
+				let nextState = docsRef.current[tab];
+
+				if (!nextState) {
+					nextState = EditorState.create({
+						doc: value,
+						extensions: createExtensions({ onChange, language, editorTheme }),
+					});
+				}
+
+				view.setState(nextState);
+				prevTabRef.current = tab;
+			}
+		}, [tab]);
+
 		useEffect(() => {
 			const view = viewRef.current;
 			if (!view) return;
@@ -126,7 +175,6 @@ const CodeEditor = forwardRef(
 				});
 			}
 		}, [value]);
-
 		// --- exposed API ---
 		useImperativeHandle(ref, () => ({
 			getValue: () => viewRef.current.state.doc.toString(),
