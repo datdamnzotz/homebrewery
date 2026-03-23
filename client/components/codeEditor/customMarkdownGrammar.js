@@ -45,38 +45,27 @@ export function tokenizeCustomMarkdown(text) {
 			tokens.push({ line: lineNumber, type: customTags.definitionTerm });
 		}
 
-		// Track ranges already marked for injections
-		const injectionRanges = [];
-
-		if (line.includes("{") && line.includes("}")) {
-			const regex = /{[^{}]*}/gm;
-			let match;
-			while ((match = regex.exec(line)) != null) {
-				codeMirror?.markText(
-					{ line: lineNumber, ch: match.index },
-					{ line: lineNumber, ch: match.index + match[0].length },
-					{ className: "injection" },
-				);
-				injectionRanges.push([match.index, match.index + match[0].length]);
-			}
+		// --- Injection `{…}` ---
+		const injectorRegex = /{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1}/g;
+		let match;
+		while ((match = injectorRegex.exec(lineText)) !== null) {
+			tokens.push({
+				line: lineNumber,
+				type: customTags.injection,
+				from: match.index,
+				to: match.index + match[0].length,
+			});
 		}
 
-		// Now mark inline blocks, but skip overlapping injection ranges
-		if (line.includes("{{") && line.includes("}}")) {
-			const regex = /{{[^{}]*}}/gm;
-			let match;
-			while ((match = regex.exec(line)) != null) {
-				const start = match.index,
-					end = match.index + match[0].length;
-				const overlaps = injectionRanges.some(([iStart, iEnd]) => start < iEnd && end > iStart);
-				if (!overlaps) {
-					codeMirror?.markText(
-						{ line: lineNumber, ch: start },
-						{ line: lineNumber, ch: end },
-						{ className: "inline-block" },
-					);
-				}
-			}
+		// --- Inline block `{{…}}` on the same line ---
+		const inlineRegex = /{{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1 *}}/g;
+		while ((match = inlineRegex.exec(lineText)) !== null) {
+			tokens.push({
+				line: lineNumber,
+				type: customTags.inlineBlock,
+				from: match.index,
+				to: match.index + match[0].length,
+			});
 		}
 
 		// --- Multi-line blocks `{{…}}` --- only start/end lines
@@ -89,6 +78,8 @@ export function tokenizeCustomMarkdown(text) {
 			tokens.push({ line: lineNumber, type: customTags.block });
 			inBlock = false;
 		}
+
+
 	});
 
 	return tokens;
