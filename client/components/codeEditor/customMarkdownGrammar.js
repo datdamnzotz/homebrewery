@@ -11,8 +11,10 @@ export const customTags = {
 	emoji: "emoji", // .cm-emoji
 	superscript: "superscript", // .cm-superscript
 	subscript: "subscript", // .cm-subscript
-	definitionTerm: "dt-highlight", // .cm-dt-highlight
-	definitionDesc: "dd-highlight", // .cm-dd-highlight
+	definitionList: "definitionList", // .cm-definitionList
+	definitionTerm: "definitionTerm", // .cm-definitionTerm
+	definitionDesc: "definitionDesc", // .cm-definitionDesc
+	definitionColon: "definitionColon", // .cm-definitionColon
 	injection: "injection", // .cm-injection
 };
 
@@ -66,11 +68,116 @@ export function tokenizeCustomMarkdown(text) {
 					Math.max(startIndex + 1, superRegex.lastIndex || 0, subRegex.lastIndex || 0),
 				);
 			}
-		};
-		// --- Definition lists ---
+		}
+
+		// --- inline definition lists ---
 		if (/::/.test(lineText)) {
-			tokens.push({ line: lineNumber, type: customTags.definitionDesc });
-			tokens.push({ line: lineNumber, type: customTags.definitionTerm });
+			if (/^:*$/.test(lineText) == true) {
+				return; //if line only has colons, stops
+			}
+
+			const singleLineRegex = /^([^:\n]*\S)(::)([^\n]*)$/dmy;
+
+			let match = singleLineRegex.exec(lineText);
+
+			if (match) {
+				const [full, term, colons, desc] = match;
+				let offset = 0;
+
+				// Entire line as definitionList
+				tokens.push({
+					line: lineNumber,
+					type: customTags.definitionList,
+				});
+
+				// Term
+				tokens.push({
+					line: lineNumber,
+					type: customTags.definitionTerm,
+					from: offset,
+					to: offset + term.length,
+				});
+				offset += term.length;
+
+				// ::
+				tokens.push({
+					line: lineNumber,
+					type: customTags.definitionColon,
+					from: offset,
+					to: offset + colons.length,
+				});
+				offset += colons.length;
+
+				// Definition
+				tokens.push({
+					line: lineNumber,
+					type: customTags.definitionDesc,
+					from: offset,
+					to: offset + desc.length,
+				});
+
+				return;
+			}
+		}
+
+		// --- Multiline definition list: term:\n::def1\n::def2 ---
+		// Only treat this line as a term if next line starts with ::
+		if (!/^::/.test(lines[lineNumber]) && lineNumber + 1 < lines.length && /^::/.test(lines[lineNumber + 1])) {
+			console.log(`testing line ${lineNumber + 1}, with content: ${lineText}`);
+			console.log(`next line is ${lineNumber + 1 + 1}, with content: ${lines[lineNumber + 1]}`);
+
+			const term = lineText;
+			const startLine = lineNumber;
+			let defs = [];
+			let endLine = startLine;
+
+			// collect all following :: definitions
+			for (let i = lineNumber + 1; i < lines.length; i++) {
+				const nextLine = lines[i];
+				const onlyColonsMatch = /^:*$/.test(nextLine);
+				const defMatch = /^(::)(.*\S.*)?\s*$/.exec(nextLine);
+				if (!onlyColonsMatch && defMatch) {
+					defs.push({ colons: defMatch[1], desc: defMatch[2], line: i });
+					endLine = i;
+				} else break;
+			}
+
+			console.log(defs);
+			if (defs.length > 0) {
+				tokens.push({
+					line: startLine,
+					type: customTags.definitionList,
+				});
+
+				// term
+				tokens.push({
+					line: startLine,
+					type: customTags.definitionTerm,
+					from: 0,
+					to: lineText.length,
+				});
+
+				// definitions
+				defs.forEach((d) => {
+					tokens.push({
+						line: d.line,
+						type: customTags.definitionList,
+					});
+
+					tokens.push({
+						line: d.line,
+						type: customTags.definitionColon,
+						from: 0,
+						to: d.colons.length,
+					});
+					tokens.push({
+						line: d.line,
+						type: customTags.definitionDesc,
+						from: d.colons.length,
+						to: d.colons.length + d.desc.length,
+					});
+				});
+			}
 		}
 
 		// --- Injection `{…}` ---

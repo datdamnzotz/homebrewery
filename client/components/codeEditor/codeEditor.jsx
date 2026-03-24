@@ -70,24 +70,21 @@ const customHighlightPlugin = ViewPlugin.fromClass(
 			tokens.forEach((tok) => {
 				const line = view.state.doc.line(tok.line + 1);
 
-				if (tok.from != null && tok.to != null) {
-					decos.push({
-						from: line.from + tok.from,
-						to: line.from + tok.to,
-						deco: Decoration.mark({ class: `cm-${tok.type}` }),
-					});
+				if (tok.from != null && tok.to != null && tok.from < tok.to) {
+					// inline decoration
+					decos.push(
+						Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to),
+					);
 				} else {
-					decos.push({
-						from: line.from,
-						to: line.from,
-						deco: Decoration.line({ class: `cm-${tok.type}` }),
-					});
+					// full-line decoration
+					decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
 				}
 			});
 
+			// sort by absolute start position
 			decos.sort((a, b) => a.from - b.from || a.to - b.to);
 
-			return Decoration.set(decos.map((d) => d.deco.range(d.from, d.to)));
+			return Decoration.set(decos);
 		}
 	},
 	{
@@ -114,7 +111,6 @@ const CodeEditor = forwardRef(
 		const docsRef = useRef({});
 		const prevTabRef = useRef(tab);
 
-		console.log(props);
 
 		// --- init editor ---
 		const createExtensions = ({ onChange, language, editorTheme }) => {
