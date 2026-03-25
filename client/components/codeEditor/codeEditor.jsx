@@ -1,9 +1,6 @@
-import "./codeEditor.less";
-import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import './codeEditor.less';
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
-import { EditorState } from "@codemirror/state";
-import { defaultKeymap, history, historyField, undo, redo } from "@codemirror/commands";
-import { foldGutter, foldKeymap } from "@codemirror/language";
 import {
 	EditorView,
 	keymap,
@@ -11,65 +8,54 @@ import {
 	highlightActiveLineGutter,
 	highlightActiveLine,
 	scrollPastEnd,
-} from "@codemirror/view";
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { languages } from "@codemirror/language-data";
-import { css } from "@codemirror/lang-css";
-import { basicLightHighlightStyle } from "cm6-theme-basic-light";
+	Decoration,
+	ViewPlugin,
+} from '@codemirror/view';
+import { EditorState, Compartment } from '@codemirror/state';
+import { foldGutter, foldKeymap, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
+import { defaultKeymap, history, historyField, undo, redo } from '@codemirror/commands';
+import { languages } from '@codemirror/language-data';
+import { css } from '@codemirror/lang-css';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 
-// themes
+import { tags } from '@lezer/highlight';
 
-import * as themes from "@uiw/codemirror-themes-all";
+// #########################   THEMES   #############################
 
-const themeList = Object.entries(themes)
-	.filter(([name, value]) => Array.isArray(value) && !name.endsWith("Init") && !name.endsWith("Style"))
-	.map(([name, theme]) => ({
-		name,
-		theme,
-	}));
-console.log(themeList);
-
-import { Compartment } from "@codemirror/state";
+import * as themes from '@uiw/codemirror-themes-all';
 
 const themeCompartment = new Compartment();
 
-// custom highlighting
-
-import { HighlightStyle } from "@codemirror/language";
-
-import { syntaxHighlighting } from "@codemirror/language";
-import { tags } from "@lezer/highlight";
+// #########################   CUSTOM HIGHLIGHTS   #############################
 
 const highlightStyle = HighlightStyle.define([
 	{
-		tag: tags.heading1,
-		color: "black",
-		fontSize: "1.75em",
-		fontWeight: "700",
-		class: "cm-header cm-header-1",
+		tag        : tags.heading1,
+		color      : 'black',
+		fontSize   : '1.75em',
+		fontWeight : '700',
+		class      : 'cm-header cm-header-1',
 	},
 	{
-		tag: tags.processingInstruction,
-		color: "blue",
+		tag   : tags.processingInstruction,
+		color : 'blue',
 	},
 	// …
 ]);
 
-/*custom tokens */
-import { Decoration, ViewPlugin, WidgetType } from "@codemirror/view";
-import { tokenizeCustomMarkdown, customTags } from "./customMarkdownGrammar.js";
+import { tokenizeCustomMarkdown, customTags } from './customMarkdownGrammar.js';
 
 const customHighlightStyle = HighlightStyle.define([
-	{ tag: tags.heading1, color: "#000", fontWeight: "700" },
-	{ tag: tags.keyword, color: "#07a" }, // example for your markdown headings
-	{ tag: customTags.pageLine, color: "#f0a" },
-	{ tag: customTags.snippetBreak, class: "cm-snippet-break", color: "#0af" },
-	{ tag: customTags.inlineBlock, class: "cm-inline-block", backgroundColor: "#fffae6" },
-	{ tag: customTags.emoji, class: "cm-emoji", color: "#fa0" },
-	{ tag: customTags.superscript, class: "cm-superscript", verticalAlign: "super", fontSize: "0.8em" },
-	{ tag: customTags.subscript, class: "cm-subscript", verticalAlign: "sub", fontSize: "0.8em" },
-	{ tag: customTags.definitionTerm, class: "cm-dt", fontWeight: "bold", color: "#0a0" },
-	{ tag: customTags.definitionDesc, class: "cm-dd", color: "#070" },
+	{ tag: tags.heading1, color: '#000', fontWeight: '700' },
+	{ tag: tags.keyword, color: '#07a' }, // example for your markdown headings
+	{ tag: customTags.pageLine, color: '#f0a' },
+	{ tag: customTags.snippetBreak, class: 'cm-snippet-break', color: '#0af' },
+	{ tag: customTags.inlineBlock, class: 'cm-inline-block', backgroundColor: '#fffae6' },
+	{ tag: customTags.emoji, class: 'cm-emoji', color: '#fa0' },
+	{ tag: customTags.superscript, class: 'cm-superscript', verticalAlign: 'super', fontSize: '0.8em' },
+	{ tag: customTags.subscript, class: 'cm-subscript', verticalAlign: 'sub', fontSize: '0.8em' },
+	{ tag: customTags.definitionTerm, class: 'cm-dt', fontWeight: 'bold', color: '#0a0' },
+	{ tag: customTags.definitionDesc, class: 'cm-dd', color: '#070' },
 ]);
 
 const customHighlightPlugin = ViewPlugin.fromClass(
@@ -78,7 +64,7 @@ const customHighlightPlugin = ViewPlugin.fromClass(
 			this.decorations = this.buildDecorations(view);
 		}
 		update(update) {
-			if (update.docChanged) {
+			if(update.docChanged) {
 				this.decorations = this.buildDecorations(update.view);
 			}
 		}
@@ -86,10 +72,10 @@ const customHighlightPlugin = ViewPlugin.fromClass(
 			const decos = [];
 			const tokens = tokenizeCustomMarkdown(view.state.doc.toString());
 
-			tokens.forEach((tok) => {
+			tokens.forEach((tok)=>{
 				const line = view.state.doc.line(tok.line + 1);
 
-				if (tok.from != null && tok.to != null && tok.from < tok.to) {
+				if(tok.from != null && tok.to != null && tok.from < tok.to) {
 					// inline decoration
 					decos.push(
 						Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to),
@@ -101,76 +87,77 @@ const customHighlightPlugin = ViewPlugin.fromClass(
 			});
 
 			// sort by absolute start position
-			decos.sort((a, b) => a.from - b.from || a.to - b.to);
+			decos.sort((a, b)=>a.from - b.from || a.to - b.to);
 
 			return Decoration.set(decos);
 		}
 	},
 	{
-		decorations: (v) => v.decorations,
+		decorations : (v)=>v.decorations,
 	},
 );
+
+// #########################   COMPONENT   #############################
 
 const CodeEditor = forwardRef(
 	(
 		{
-			value = "",
-			onChange = () => {},
-			language = "",
-			tab = "brewText",
-			editorTheme = "default",
+			value = '',
+			onChange = ()=>{},
+			language = '',
+			tab = 'brewText',
+			editorTheme = 'default',
 			view,
 			style,
 			...props
 		},
 		ref,
-	) => {
+	)=>{
 		const editorRef = useRef(null);
 		const viewRef = useRef(null);
 		const docsRef = useRef({});
 		const prevTabRef = useRef(tab);
 
-		// --- init editor ---
-		const createExtensions = ({ onChange, language, editorTheme }) => {
-			const updateListener = EditorView.updateListener.of((update) => {
-				if (update.docChanged) {
+		const createExtensions = ({ onChange, language, editorTheme })=>{
+			const updateListener = EditorView.updateListener.of((update)=>{
+				if(update.docChanged) {
 					onChange(update.state.doc.toString());
 				}
 			});
 
-			const boldCommand = (view) => {
+			const boldCommand = (view)=>{
 				const { from, to } = view.state.selection.main;
 				const selected = view.state.doc.sliceString(from, to);
 				const text = `**${selected}**`;
 
 				view.dispatch({
-					changes: { from, to, insert: text },
-					selection: { anchor: from + text.length },
+					changes   : { from, to, insert: text },
+					selection : { anchor: from + text.length },
 				});
 
 				return true;
 			};
 
-			const italicCommand = (view) => {
+			const italicCommand = (view)=>{
 				const { from, to } = view.state.selection.main;
 				const selected = view.state.doc.sliceString(from, to);
 				const text = `*${selected}*`;
 
 				view.dispatch({
-					changes: { from, to, insert: text },
-					selection: { anchor: from + text.length },
+					changes   : { from, to, insert: text },
+					selection : { anchor: from + text.length },
 				});
 
 				return true;
 			};
 
 			const customKeymap = keymap.of([
-				{ key: "Mod-b", run: boldCommand },
-				{ key: "Mod-i", run: italicCommand },
+				{ key: 'Mod-b', run: boldCommand },
+				{ key: 'Mod-i', run: italicCommand },
 			]);
 
 			const languageExtension =
-				language === "css" ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
+				language === 'css' ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
 
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
 
@@ -196,43 +183,43 @@ const CodeEditor = forwardRef(
 			];
 		};
 
-		useEffect(() => {
-			if (!editorRef.current) return;
+		useEffect(()=>{
+			if(!editorRef.current) return;
 
 			// create initial editor state
 			const state = EditorState.create({
-				doc: value,
-				extensions: createExtensions({ onChange, language, editorTheme }),
+				doc        : value,
+				extensions : createExtensions({ onChange, language, editorTheme }),
 			});
 
 			viewRef.current = new EditorView({
 				state,
-				parent: editorRef.current,
+				parent : editorRef.current,
 			});
 
 			// save initial state for current tab
 			docsRef.current[tab] = state;
 
-			return () => viewRef.current?.destroy();
+			return ()=>viewRef.current?.destroy();
 		}, []);
 
-		useEffect(() => {
+		useEffect(()=>{
 			const view = viewRef.current;
-			if (!view) return;
+			if(!view) return;
 
 			const prevTab = prevTabRef.current;
 
-			if (prevTab !== tab) {
+			if(prevTab !== tab) {
 				// save current state
 				docsRef.current[prevTab] = view.state;
 
 				// restore or create
 				let nextState = docsRef.current[tab];
 
-				if (!nextState) {
+				if(!nextState) {
 					nextState = EditorState.create({
-						doc: value,
-						extensions: createExtensions({ onChange, language, editorTheme }),
+						doc        : value,
+						extensions : createExtensions({ onChange, language, editorTheme }),
 					});
 				}
 
@@ -241,76 +228,76 @@ const CodeEditor = forwardRef(
 			}
 		}, [tab]);
 
-		useEffect(() => {
+		useEffect(()=>{
 			const view = viewRef.current;
-			if (!view) return;
+			if(!view) return;
 
 			const current = view.state.doc.toString();
-			if (value !== current) {
+			if(value !== current) {
 				view.dispatch({
-					changes: { from: 0, to: current.length, insert: value },
+					changes : { from: 0, to: current.length, insert: value },
 				});
 			}
 		}, [value]);
 
-		useEffect(() => { //rebuild theme extension on theme change
+		useEffect(()=>{
+			//rebuild theme extension on theme change
 			const view = viewRef.current;
-			if (!view) return;
+			if(!view) return;
 
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
 
 			view.dispatch({
-				effects: themeCompartment.reconfigure(themeExtension),
+				effects : themeCompartment.reconfigure(themeExtension),
 			});
 		}, [editorTheme]);
 
+		useImperativeHandle(ref, ()=>({
+			getValue : ()=>viewRef.current.state.doc.toString(),
 
-		useImperativeHandle(ref, () => ({
-			getValue: () => viewRef.current.state.doc.toString(),
-
-			setValue: (text) => {
+			setValue : (text)=>{
 				const view = viewRef.current;
 				view.dispatch({
-					changes: { from: 0, to: view.state.doc.length, insert: text },
+					changes : { from: 0, to: view.state.doc.length, insert: text },
 				});
 			},
 
-			injectText: (text) => {
+			injectText : (text)=>{
 				const view = viewRef.current;
 				const { from, to } = view.state.selection.main;
 
 				view.dispatch({
-					changes: { from, to, insert: text },
-					selection: { anchor: from + text.length },
+					changes   : { from, to, insert: text },
+					selection : { anchor: from + text.length },
 				});
 
 				view.focus();
 			},
 
-			getCursorPosition: () => viewRef.current.state.selection.main.head,
+			getCursorPosition : ()=>viewRef.current.state.selection.main.head,
 
-			setCursorPosition: (pos) => {
+			setCursorPosition : (pos)=>{
 				viewRef.current.dispatch({ selection: { anchor: pos } });
 				viewRef.current.focus();
 			},
 
-			undo: () => undo(viewRef.current),
-			redo: () => redo(viewRef.current),
+			undo : ()=>undo(viewRef.current),
+			redo : ()=>redo(viewRef.current),
 
-			historySize: () => {
+			historySize : ()=>{
 				const view = viewRef.current;
-				if (!view) return { done: 0, undone: 0 };
+				if(!view) return { done: 0, undone: 0 };
 
 				const h = view.state.field(historyField, false);
-				if (!h) return { done: 0, undone: 0 };
+				if(!h) return { done: 0, undone: 0 };
 
 				return { done: h.done.length, undone: h.undone.length };
 			},
 
-			focus: () => viewRef.current.focus(),
+			focus : ()=>viewRef.current.focus(),
 		}));
 
-		return <div className="codeEditor" ref={editorRef} style={style} />;
+		return <div className='codeEditor' ref={editorRef} style={style} />;
 	},
 );
 
