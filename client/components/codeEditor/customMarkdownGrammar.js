@@ -29,8 +29,8 @@ export function tokenizeCustomMarkdown(text) {
 
 	lines.forEach((lineText, lineNumber) => {
 		// --- Page / snippet lines ---
-		if (/\\page/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.pageLine });
-		if (/\\snippet/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetLine });
+		if (/^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m.test(lineText)) tokens.push({ line: lineNumber, type: customTags.pageLine });
+		if (/^\\snippet\ .*$/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetLine });
 		if (/^\\column(?:break)?$/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.columnSplit });
 		if (/\\snippet/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetBreak });
 
@@ -185,7 +185,6 @@ export function tokenizeCustomMarkdown(text) {
 					to: match.index + match[1].length +1,
 					type: customTags.injection,
 				});
-				console.log(match);
 			}
 		}
 		if (lineText.includes("{{") && lineText.includes("}}")) {
