@@ -6,8 +6,9 @@ export const customTags = {
 	snippetLine: "snippetLine", // .cm-snippetLine
 	columnSplit: "columnSplit", // .cm-columnSplit
 	snippetBreak: "snippetBreak", // .cm-snippetBreak
-	inlineBlock: "inline-block", // .cm-inline-block
 	block: "block", // .cm-block
+	inlineBlock: "inline-block", // .cm-inline-block
+	injection: "injection", // .cm-injection
 	emoji: "emoji", // .cm-emoji
 	superscript: "superscript", // .cm-superscript
 	subscript: "subscript", // .cm-subscript
@@ -15,7 +16,6 @@ export const customTags = {
 	definitionTerm: "definitionTerm", // .cm-definitionTerm
 	definitionDesc: "definitionDesc", // .cm-definitionDesc
 	definitionColon: "definitionColon", // .cm-definitionColon
-	injection: "injection", // .cm-injection
 };
 
 // --- Tokenizer function ---
@@ -120,12 +120,8 @@ export function tokenizeCustomMarkdown(text) {
 			}
 		}
 
-		// --- Multiline definition list: term:\n::def1\n::def2 ---
-		// Only treat this line as a term if next line starts with ::
+		// multiline def list
 		if (!/^::/.test(lines[lineNumber]) && lineNumber + 1 < lines.length && /^::/.test(lines[lineNumber + 1])) {
-			console.log(`testing line ${lineNumber + 1}, with content: ${lineText}`);
-			console.log(`next line is ${lineNumber + 1 + 1}, with content: ${lines[lineNumber + 1]}`);
-
 			const term = lineText;
 			const startLine = lineNumber;
 			let defs = [];
@@ -142,7 +138,6 @@ export function tokenizeCustomMarkdown(text) {
 				} else break;
 			}
 
-			console.log(defs);
 			if (defs.length > 0) {
 				tokens.push({
 					line: startLine,
@@ -180,39 +175,53 @@ export function tokenizeCustomMarkdown(text) {
 			}
 		}
 
-		// --- Injection `{…}` ---
-		const injectorRegex = /{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1}/g;
-		let match;
-		while ((match = injectorRegex.exec(lineText)) !== null) {
-			tokens.push({
-				line: lineNumber,
-				type: customTags.injection,
-				from: match.index,
-				to: match.index + match[0].length,
-			});
+		if (lineText.includes("{") && lineText.includes("}")) {
+			const injectionRegex = /(?:^|[^{\n])({(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\2})/gm;
+			let match;
+			while ((match = injectionRegex.exec(lineText)) !== null) {
+				tokens.push({
+					line: lineNumber,
+					from: match.index +1,
+					to: match.index + match[1].length +1,
+					type: customTags.injection,
+				});
+				console.log(match);
+			}
 		}
+		if (lineText.includes("{{") && lineText.includes("}}")) {
+			// Inline blocks: single-line {{…}}
+			const spanRegex = /{{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1 *|}}/g;
+			let match;
+			let blockCount = 0;
+			while ((match = spanRegex.exec(lineText)) !== null) {
+				if (match[0].startsWith("{{")) {
+					blockCount += 1;
+				} else {
+					blockCount -= 1;
+				}
+				if (blockCount < 0) {
+					blockCount = 0;
+					continue;
+				}
+				tokens.push({
+					line: lineNumber,
+					from: match.index,
+					to: match.index + match[0].length,
+					type: customTags.inlineBlock,
+				});
+			}
+		} else if (lineText.trimLeft().startsWith("{{") || lineText.trimLeft().startsWith("}}")) {
+			// Highlight block divs {{\n Content \n}}
+			let endCh = lineText.length + 1;
 
-		// --- Inline block `{{…}}` on the same line ---
-		const inlineRegex = /{{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1 *}}/g;
-		while ((match = inlineRegex.exec(lineText)) !== null) {
-			tokens.push({
-				line: lineNumber,
-				type: customTags.inlineBlock,
-				from: match.index,
-				to: match.index + match[0].length,
-			});
-		}
-
-		// --- Multi-line blocks `{{…}}` --- only start/end lines
-		if (lineText.trimLeft().startsWith("{{") && !lineText.trimLeft().endsWith("}}")) {
-			inBlock = true;
-			blockStart = lineNumber;
+			const match = lineText.match(
+				/^ *{{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1 *$|^ *}}$/,
+			);
+			if (match) endCh = match.index + match[0].length;
 			tokens.push({ line: lineNumber, type: customTags.block });
 		}
-		if (lineText.trimLeft().startsWith("}}") && inBlock) {
-			tokens.push({ line: lineNumber, type: customTags.block });
-			inBlock = false;
-		}
+
+	
 	});
 
 	return tokens;
