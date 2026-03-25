@@ -10,6 +10,7 @@ import {
 	scrollPastEnd,
 	Decoration,
 	ViewPlugin,
+	WidgetType,
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { foldGutter, foldKeymap, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
@@ -97,6 +98,59 @@ const customHighlightPlugin = ViewPlugin.fromClass(
 	},
 );
 
+// #########################   FOLDING   ###############################
+
+
+import { foldService } from '@codemirror/language';
+
+class FoldPreviewWidget extends WidgetType {
+	constructor(text) {
+		super();
+		this.text = text;
+	}
+	toDOM() {
+		console.log(this.text);
+		const span = document.createElement('span');
+		span.className = 'cm-fold-placeholder';
+		span.textContent = this.text;
+		return span;
+	}
+}
+
+const homebreweryFold = foldService.of((state, lineStart)=>{
+	const doc = state.doc;
+	const matcher = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
+
+	const startLine = doc.lineAt(lineStart);
+	const prevLineText = startLine.number > 1 ? doc.line(startLine.number - 1).text : '';
+
+	if(startLine.number > 1 && !matcher.test(prevLineText)) return null;
+
+	let endLine = startLine.number;
+	while (endLine < doc.lines && !matcher.test(doc.line(endLine + 1).text)) {
+		endLine++;
+	}
+
+	if(endLine === startLine.number) return null;
+
+	let preview = '';
+	for (let i = startLine.number; i <= endLine; i++) {
+		const text = doc.line(i).text.trim();
+		if(text.length > 0) {
+			preview = text;
+			break;
+		}
+	}
+
+	if(!preview) preview = `Lines ${startLine.number}-${endLine}`;
+
+	preview = preview.replace('{', '').trim();
+	if(preview.length > 50) preview = `${preview.slice(0, 50)}...`;
+	preview = `↤ ${preview} ↦`;
+
+	return { from: startLine.from, to: doc.line(endLine).to, placeholder: new FoldPreviewWidget(preview) };
+});
+
 // #########################   COMPONENT   #############################
 
 const CodeEditor = forwardRef(
@@ -174,6 +228,7 @@ const CodeEditor = forwardRef(
 				keymap.of(foldKeymap),
 				foldGutter(),
 				lineNumbers(),
+				homebreweryFold,
 
 				themeCompartment.of(themeExtension), // 👈 key line
 
