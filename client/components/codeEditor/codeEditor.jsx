@@ -16,6 +16,25 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { css } from "@codemirror/lang-css";
 import { basicLightHighlightStyle } from "cm6-theme-basic-light";
+
+// themes
+
+import * as themes from "@uiw/codemirror-themes-all";
+
+const themeList = Object.entries(themes)
+	.filter(([name, value]) => Array.isArray(value) && !name.endsWith("Init") && !name.endsWith("Style"))
+	.map(([name, theme]) => ({
+		name,
+		theme,
+	}));
+console.log(themeList);
+
+import { Compartment } from "@codemirror/state";
+
+const themeCompartment = new Compartment();
+
+// custom highlighting
+
 import { HighlightStyle } from "@codemirror/language";
 
 import { syntaxHighlighting } from "@codemirror/language";
@@ -111,7 +130,6 @@ const CodeEditor = forwardRef(
 		const docsRef = useRef({});
 		const prevTabRef = useRef(tab);
 
-
 		// --- init editor ---
 		const createExtensions = ({ onChange, language, editorTheme }) => {
 			const updateListener = EditorView.updateListener.of((update) => {
@@ -154,7 +172,7 @@ const CodeEditor = forwardRef(
 			const languageExtension =
 				language === "css" ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
 
-			const themeExtension = syntaxHighlighting(basicLightHighlightStyle);
+			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
 
 			return [
 				history(),
@@ -169,7 +187,9 @@ const CodeEditor = forwardRef(
 				keymap.of(foldKeymap),
 				foldGutter(),
 				lineNumbers(),
-				themeExtension,
+
+				themeCompartment.of(themeExtension), // 👈 key line
+
 				syntaxHighlighting(highlightStyle),
 				customHighlightPlugin,
 				syntaxHighlighting(customHighlightStyle),
@@ -232,7 +252,19 @@ const CodeEditor = forwardRef(
 				});
 			}
 		}, [value]);
-		// --- exposed API ---
+
+		useEffect(() => { //rebuild theme extension on theme change
+			const view = viewRef.current;
+			if (!view) return;
+
+			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
+
+			view.dispatch({
+				effects: themeCompartment.reconfigure(themeExtension),
+			});
+		}, [editorTheme]);
+
+
 		useImperativeHandle(ref, () => ({
 			getValue: () => viewRef.current.state.doc.toString(),
 

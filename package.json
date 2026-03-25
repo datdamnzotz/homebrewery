@@ -104,6 +104,7 @@
     "@googleapis/drive": "^20.1.0",
     "@lezer/highlight": "^1.2.3",
     "@sanity/diff-match-patch": "^3.2.0",
+    "@uiw/codemirror-themes-all": "^4.25.8",
     "@vitejs/plugin-react": "^5.1.2",
     "body-parser": "^2.2.0",
     "classnames": "^2.5.1",
