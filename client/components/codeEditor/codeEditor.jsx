@@ -100,22 +100,7 @@ const customHighlightPlugin = ViewPlugin.fromClass(
 
 // #########################   FOLDING   ###############################
 
-
 import { foldService } from '@codemirror/language';
-
-class FoldPreviewWidget extends WidgetType {
-	constructor(text) {
-		super();
-		this.text = text;
-	}
-	toDOM() {
-		console.log(this.text);
-		const span = document.createElement('span');
-		span.className = 'cm-fold-placeholder';
-		span.textContent = this.text;
-		return span;
-	}
-}
 
 const homebreweryFold = foldService.of((state, lineStart)=>{
 	const doc = state.doc;
@@ -133,23 +118,57 @@ const homebreweryFold = foldService.of((state, lineStart)=>{
 
 	if(endLine === startLine.number) return null;
 
+	const widgetObject = { from: startLine.from, to: doc.line(endLine).to };
+	console.log(widgetObject);
+
+	return widgetObject;
+});
+
+import { codeFolding } from '@codemirror/language';
+
+function getFoldPreview(state, from, to) {
+	const doc = state.doc;
+	const startLine = doc.lineAt(from).number;
+	const endLine = doc.lineAt(to).number;
+
+	// If the current line has text, do not generate a preview
+	if (doc.line(startLine).text.trim().length > 0) {
+		return `↤ Lines ${startLine}-${endLine} ↦`;
+	}
+
 	let preview = '';
-	for (let i = startLine.number; i <= endLine; i++) {
+
+	for (let i = startLine + 1; i <= endLine; i++) {
 		const text = doc.line(i).text.trim();
-		if(text.length > 0) {
+		if (text.length > 0) {
 			preview = text;
 			break;
 		}
 	}
 
-	if(!preview) preview = `Lines ${startLine.number}-${endLine}`;
+	if (!preview) preview = `Lines ${startLine}-${endLine}`;
 
 	preview = preview.replace('{', '').trim();
-	if(preview.length > 50) preview = `${preview.slice(0, 50)}...`;
-	preview = `↤ ${preview} ↦`;
+	if (preview.length > 50) preview = `${preview.slice(0, 50)}...`;
 
-	return { from: startLine.from, to: doc.line(endLine).to, placeholder: new FoldPreviewWidget(preview) };
+	return `↤ ${preview} ↦`;
+}
+
+const hbFolding = codeFolding({
+	preparePlaceholder : (state, range)=>{
+		return getFoldPreview(state, range.from, range.to);
+	},
+
+	placeholderDOM(view, onclick, prepared) {
+		const span = document.createElement('span');
+		span.className = 'cm-fold-placeholder';
+		span.textContent = prepared;
+		span.onclick = onclick;
+		span.style.color = '#989898';
+		return span;
+	}
 });
+
 
 // #########################   COMPONENT   #############################
 
@@ -225,11 +244,16 @@ const CodeEditor = forwardRef(
 				languageExtension,
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
-				keymap.of(foldKeymap),
-				foldGutter(),
+
 				lineNumbers(),
 				homebreweryFold,
+				hbFolding,
 
+				keymap.of(foldKeymap),
+				foldGutter({
+					openText   : '▾',
+					closedText : '▸'
+				}),
 				themeCompartment.of(themeExtension), // 👈 key line
 
 				syntaxHighlighting(highlightStyle),
