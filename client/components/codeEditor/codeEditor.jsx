@@ -18,6 +18,7 @@ import { defaultKeymap, history, historyField, undo, redo } from '@codemirror/co
 import { languages } from '@codemirror/language-data';
 import { css } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { autocompleteEmoji } from './autocompleteEmoji.js';
 
 import * as themes from '@uiw/codemirror-themes-all';
 const themeCompartment = new Compartment();
@@ -31,20 +32,20 @@ import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './lega
 const createHighlightPlugin = (renderer, tab)=>{
 	const tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
 
-class countWidget extends WidgetType {
-    constructor(count) {
-        super();
-        this.count = count;
-    }
-    toDOM() {
-        const span = document.createElement("span");
-        span.className = "cm-page-count";
-        span.textContent = this.count;
-        span.style.color = "#989898";
-        return span;
-    }
-    ignoreEvent() { return true; }
-}
+	class countWidget extends WidgetType {
+		constructor(count) {
+			super();
+			this.count = count;
+		}
+		toDOM() {
+			const span = document.createElement('span');
+			span.className = 'cm-page-count';
+			span.textContent = this.count;
+			span.style.color = '#989898';
+			return span;
+		}
+		ignoreEvent() { return true; }
+	}
 
 	return ViewPlugin.fromClass(
 		class {
@@ -154,6 +155,7 @@ const CodeEditor = forwardRef(
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
 				highlightCompartment.of(combinedHighlight),
+				autocompleteEmoji,
 			];
 		};
 
