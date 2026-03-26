@@ -72,7 +72,6 @@ const Editor = createReactClass({
 
 	componentDidMount : function() {
 
-		this.highlightCustomMarkdown();
 		document.getElementById('BrewRenderer').addEventListener('keydown', this.handleControlKeys);
 		document.addEventListener('keydown', this.handleControlKeys);
 
@@ -98,7 +97,6 @@ const Editor = createReactClass({
 
 	componentDidUpdate : function(prevProps, prevState, snapshot) {
 
-		this.highlightCustomMarkdown();
 		if(prevProps.moveBrew !== this.props.moveBrew)
 			this.brewJump();
 
@@ -158,175 +156,6 @@ const Editor = createReactClass({
 		}, ()=>{
 			this.codeEditor.current?.codeMirror?.focus();
 		});
-	},
-
-	highlightCustomMarkdown : function(){
-		if(!this.codeEditor.current?.codeMirror) return;
-		if((this.state.view === 'text') ||(this.state.view === 'snippet')) {
-			const codeMirror = this.codeEditor.current.codeMirror;
-
-			codeMirror?.operation(()=>{ // Batch CodeMirror styling
-
-				const foldLines = [];
-
-				//reset custom text styles
-				const customHighlights = codeMirror?.getAllMarks().filter((mark)=>{
-					// Record details of folded sections
-					if(mark.__isFold) {
-						const fold = mark.find();
-						foldLines.push({ from: fold.from?.line, to: fold.to?.line });
-					}
-					return !mark.__isFold;
-				}); //Don't undo code folding
-
-				for (let i=customHighlights.length - 1;i>=0;i--) customHighlights[i].clear();
-
-				let userSnippetCount = 1; // start snippet count from snippet 1
-				let editorPageCount = 1; // start page count from page 1
-
-				const whichSource = this.state.view === 'text' ? this.props.brew.text : this.props.brew.snippets;
-				_.forEach(whichSource?.split('\n'), (line, lineNumber)=>{
-
-					const tabHighlight = this.state.view === 'text' ? 'pageLine' : 'snippetLine';
-					const textOrSnip = this.state.view === 'text';
-
-					//reset custom line styles
-					codeMirror?.removeLineClass(lineNumber, 'background', 'pageLine');
-					codeMirror?.removeLineClass(lineNumber, 'background', 'snippetLine');
-					codeMirror?.removeLineClass(lineNumber, 'text');
-					codeMirror?.removeLineClass(lineNumber, 'wrap', 'sourceMoveFlash');
-
-					// Don't process lines inside folded text
-					// If the current lineNumber is inside any folded marks, skip line styling
-					if(foldLines.some((fold)=>lineNumber >= fold.from && lineNumber <= fold.to))
-						return;
-
-					// Styling for \page breaks
-					if((this.props.renderer == 'legacy' && line.includes('\\page')) ||
-				     (this.props.renderer == 'V3'     && line.match(textOrSnip ? PAGEBREAK_REGEX_V3 : SNIPPETBREAK_REGEX_V3))) {
-
-						if((lineNumber > 0) && (textOrSnip))      // Since \page is optional on first line of document,
-							editorPageCount += 1; // don't use it to increment page count; stay at 1
-						else if(this.state.view !== 'text')	userSnippetCount += 1;
-
-						// add back the original class 'background' but also add the new class '.pageline'
-						codeMirror?.addLineClass(lineNumber, 'background', tabHighlight);
-						const pageCountElement = Object.assign(document.createElement('span'), {
-							className   : 'editor-page-count',
-							textContent : textOrSnip ? editorPageCount : userSnippetCount
-						});
-						codeMirror?.setBookmark({ line: lineNumber, ch: line.length }, pageCountElement);
-					};
-
-
-					// New CodeMirror styling for V3 renderer
-					if(this.props.renderer === 'V3') {
-						if(line.match(/^\\column(?:break)?$/)){
-							codeMirror?.addLineClass(lineNumber, 'text', 'columnSplit');
-						}
-
-						// definition lists
-						if(line.includes('::')){
-							if(/^:*$/.test(line) == true){ return; };
-							const regex = /^([^\n]*?:?\s?)(::[^\n]*)(?:\n|$)/ymd;  // the `d` flag, for match indices, throws an ESLint error.
-							let match;
-							while ((match = regex.exec(line)) != null){
-								codeMirror?.markText({ line: lineNumber, ch: match.indices[0][0] }, { line: lineNumber, ch: match.indices[0][1] }, { className: 'dl-highlight' });
-								codeMirror?.markText({ line: lineNumber, ch: match.indices[1][0] }, { line: lineNumber, ch: match.indices[1][1] }, { className: 'dt-highlight' });
-								codeMirror?.markText({ line: lineNumber, ch: match.indices[2][0] }, { line: lineNumber, ch: match.indices[2][1] }, { className: 'dd-highlight' });
-								const ddIndex = match.indices[2][0];
-								const colons = /::/g;
-								const colonMatches = colons.exec(match[2]);
-								if(colonMatches !== null){
-									codeMirror?.markText({ line: lineNumber, ch: colonMatches.index + ddIndex }, { line: lineNumber, ch: colonMatches.index + colonMatches[0].length + ddIndex }, { className: 'dl-colon-highlight' });
-								}
-							}
-						}
-
-						// Subscript & Superscript
-						if(line.includes('^')) {
-							let startIndex = line.indexOf('^');
-							const superRegex = /\^(?!\s)(?=([^\n\^]*[^\s\^]))\1\^/gy;
-							const subRegex   = /\^\^(?!\s)(?=([^\n\^]*[^\s\^]))\1\^\^/gy;
-
-							while (startIndex >= 0) {
-								superRegex.lastIndex = subRegex.lastIndex = startIndex;
-								let isSuper = false;
-								const match = subRegex.exec(line) || superRegex.exec(line);
-								if(match) {
-									isSuper = !subRegex.lastIndex;
-									codeMirror?.markText({ line: lineNumber, ch: match.index }, { line: lineNumber, ch: match.index + match[0].length }, { className: isSuper ? 'superscript' : 'subscript' });
-								}
-								startIndex = line.indexOf('^', Math.max(startIndex + 1, subRegex.lastIndex, superRegex.lastIndex));
-							}
-						}
-
-						// Highlight injectors {style}
-						if(line.includes('{') && line.includes('}')){
-							const regex = /(?:^|[^{\n])({(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\2})/gm;
-							let match;
-							while ((match = regex.exec(line)) != null) {
-								codeMirror?.markText({ line: lineNumber, ch: line.indexOf(match[1]) }, { line: lineNumber, ch: line.indexOf(match[1]) + match[1].length }, { className: 'injection' });
-							}
-						}
-						// Highlight inline spans {{content}}
-						if(line.includes('{{') && line.includes('}}')){
-							const regex = /{{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1 *|}}/g;
-							let match;
-							let blockCount = 0;
-							while ((match = regex.exec(line)) != null) {
-								if(match[0].startsWith('{')) {
-									blockCount += 1;
-								} else {
-									blockCount -= 1;
-								}
-								if(blockCount < 0) {
-									blockCount = 0;
-									continue;
-								}
-								codeMirror?.markText({ line: lineNumber, ch: match.index }, { line: lineNumber, ch: match.index + match[0].length }, { className: 'inline-block' });
-							}
-						} else if(line.trimLeft().startsWith('{{') || line.trimLeft().startsWith('}}')){
-							// Highlight block divs {{\n Content \n}}
-							let endCh = line.length+1;
-
-							const match = line.match(/^ *{{(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\1 *$|^ *}}$/);
-							if(match)
-								endCh = match.index+match[0].length;
-							codeMirror?.markText({ line: lineNumber, ch: 0 }, { line: lineNumber, ch: endCh }, { className: 'block' });
-						}
-
-						// Emojis
-						if(line.match(/:[^\s:]+:/g)) {
-							let startIndex = line.indexOf(':');
-							const emojiRegex = /:[^\s:]+:/gy;
-
-							while (startIndex >= 0) {
-								emojiRegex.lastIndex = startIndex;
-								const match = emojiRegex.exec(line);
-								if(match) {
-									let tokens = Markdown.marked.lexer(match[0]);
-									tokens = tokens[0].tokens.filter((t)=>t.type == 'emoji');
-									if(!tokens.length)
-										return;
-
-									const startPos = { line: lineNumber, ch: match.index };
-									const endPos   = { line: lineNumber, ch: match.index + match[0].length };
-
-									// Iterate over conflicting marks and clear them
-									const marks = codeMirror?.findMarks(startPos, endPos);
-									marks.forEach(function(marker) {
-										if(!marker.__isFold) marker.clear();
-									});
-									codeMirror?.markText(startPos, endPos, { className: 'emoji' });
-								}
-								startIndex = line.indexOf(':', Math.max(startIndex + 1, emojiRegex.lastIndex));
-							}
-						}
-					}
-				});
-			});
-		}
 	},
 
 	brewJump : function(targetPage=this.props.currentEditorCursorPageNum, smooth=true){
