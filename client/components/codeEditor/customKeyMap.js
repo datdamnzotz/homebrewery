@@ -1,4 +1,5 @@
 import { keymap } from '@codemirror/view';
+import { undo, redo } from '@codemirror/commands';
 
 const indentMore = (view)=>{
 	const { from, to } = view.state.selection.main;
@@ -221,4 +222,6 @@ export const customKeymap = keymap.of([
 	{ key: 'Shift-Mod-6', run: makeHeader(6) },
 	{ key: 'Shift-Mod-Enter', run: newColumn },
 	{ key: 'Mod-Enter', run: newPage },
+	{ key: 'Mod-z', run: undo }, //i think it may be unnecessary
+	{ key: 'Mod-Shift-z', run: redo },
 ]);
