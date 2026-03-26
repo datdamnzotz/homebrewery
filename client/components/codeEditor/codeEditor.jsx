@@ -8,169 +8,19 @@ import {
 	highlightActiveLineGutter,
 	highlightActiveLine,
 	scrollPastEnd,
-	Decoration,
-	ViewPlugin,
-	WidgetType,
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
-import { foldGutter, foldKeymap, syntaxHighlighting, HighlightStyle } from '@codemirror/language';
+import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, historyField, undo, redo } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
 import { css } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 
-import { tags } from '@lezer/highlight';
-
-// #########################   THEMES   #############################
-
 import * as themes from '@uiw/codemirror-themes-all';
-
 const themeCompartment = new Compartment();
 
-// #########################   CUSTOM HIGHLIGHTS   #############################
-
-const highlightStyle = HighlightStyle.define([
-	{
-		tag        : tags.heading1,
-		color      : 'black',
-		fontSize   : '1.75em',
-		fontWeight : '700',
-		class      : 'cm-header cm-header-1',
-	},
-	{
-		tag   : tags.processingInstruction,
-		color : 'blue',
-	},
-	// …
-]);
-
-import { tokenizeCustomMarkdown, customTags } from './customMarkdownGrammar.js';
-
-const customHighlightStyle = HighlightStyle.define([
-	{ tag: tags.heading1, color: '#000', fontWeight: '700' },
-	{ tag: tags.keyword, color: '#07a' }, // example for your markdown headings
-	{ tag: customTags.pageLine, color: '#f0a' },
-	{ tag: customTags.snippetBreak, class: 'cm-snippet-break', color: '#0af' },
-	{ tag: customTags.inlineBlock, class: 'cm-inline-block', backgroundColor: '#fffae6' },
-	{ tag: customTags.emoji, class: 'cm-emoji', color: '#fa0' },
-	{ tag: customTags.superscript, class: 'cm-superscript', verticalAlign: 'super', fontSize: '0.8em' },
-	{ tag: customTags.subscript, class: 'cm-subscript', verticalAlign: 'sub', fontSize: '0.8em' },
-	{ tag: customTags.definitionTerm, class: 'cm-dt', fontWeight: 'bold', color: '#0a0' },
-	{ tag: customTags.definitionDesc, class: 'cm-dd', color: '#070' },
-]);
-
-const customHighlightPlugin = ViewPlugin.fromClass(
-	class {
-		constructor(view) {
-			this.decorations = this.buildDecorations(view);
-		}
-		update(update) {
-			if(update.docChanged) {
-				this.decorations = this.buildDecorations(update.view);
-			}
-		}
-		buildDecorations(view) {
-			const decos = [];
-			const tokens = tokenizeCustomMarkdown(view.state.doc.toString());
-
-			tokens.forEach((tok)=>{
-				const line = view.state.doc.line(tok.line + 1);
-
-				if(tok.from != null && tok.to != null && tok.from < tok.to) {
-					// inline decoration
-					decos.push(
-						Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to),
-					);
-				} else {
-					// full-line decoration
-					decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
-				}
-			});
-
-			// sort by absolute start position
-			decos.sort((a, b)=>a.from - b.from || a.to - b.to);
-
-			return Decoration.set(decos);
-		}
-	},
-	{
-		decorations : (v)=>v.decorations,
-	},
-);
-
-// #########################   FOLDING   ###############################
-
-import { foldService } from '@codemirror/language';
-
-const homebreweryFold = foldService.of((state, lineStart)=>{
-	const doc = state.doc;
-	const matcher = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
-
-	const startLine = doc.lineAt(lineStart);
-	const prevLineText = startLine.number > 1 ? doc.line(startLine.number - 1).text : '';
-
-	if(startLine.number > 1 && !matcher.test(prevLineText)) return null;
-
-	let endLine = startLine.number;
-	while (endLine < doc.lines && !matcher.test(doc.line(endLine + 1).text)) {
-		endLine++;
-	}
-
-	if(endLine === startLine.number) return null;
-
-	const widgetObject = { from: startLine.from, to: doc.line(endLine).to };
-	console.log(widgetObject);
-
-	return widgetObject;
-});
-
-import { codeFolding } from '@codemirror/language';
-
-function getFoldPreview(state, from, to) {
-	const doc = state.doc;
-	const startLine = doc.lineAt(from).number;
-	const endLine = doc.lineAt(to).number;
-
-	// If the current line has text, do not generate a preview
-	if (doc.line(startLine).text.trim().length > 0) {
-		return `↤ Lines ${startLine}-${endLine} ↦`;
-	}
-
-	let preview = '';
-
-	for (let i = startLine + 1; i <= endLine; i++) {
-		const text = doc.line(i).text.trim();
-		if (text.length > 0) {
-			preview = text;
-			break;
-		}
-	}
-
-	if (!preview) preview = `Lines ${startLine}-${endLine}`;
-
-	preview = preview.replace('{', '').trim();
-	if (preview.length > 50) preview = `${preview.slice(0, 50)}...`;
-
-	return `↤ ${preview} ↦`;
-}
-
-const hbFolding = codeFolding({
-	preparePlaceholder : (state, range)=>{
-		return getFoldPreview(state, range.from, range.to);
-	},
-
-	placeholderDOM(view, onclick, prepared) {
-		const span = document.createElement('span');
-		span.className = 'cm-fold-placeholder';
-		span.textContent = prepared;
-		span.onclick = onclick;
-		span.style.color = '#989898';
-		return span;
-	}
-});
-
-
-// #########################   COMPONENT   #############################
+import { customHighlightPlugin, customHighlightStyle } from './customHighlight.js';
+import { homebreweryFold, hbFolding } from './customFolding.js';
 
 const CodeEditor = forwardRef(
 	(
@@ -242,8 +92,6 @@ const CodeEditor = forwardRef(
 				EditorView.lineWrapping,
 				scrollPastEnd(),
 				languageExtension,
-				highlightActiveLine(),
-				highlightActiveLineGutter(),
 
 				lineNumbers(),
 				homebreweryFold,
@@ -254,9 +102,10 @@ const CodeEditor = forwardRef(
 					openText   : '▾',
 					closedText : '▸'
 				}),
-				themeCompartment.of(themeExtension), // 👈 key line
+				themeCompartment.of(themeExtension),
 
-				syntaxHighlighting(highlightStyle),
+				highlightActiveLine(),
+				highlightActiveLineGutter(),
 				customHighlightPlugin,
 				syntaxHighlighting(customHighlightStyle),
 			];
@@ -265,7 +114,6 @@ const CodeEditor = forwardRef(
 		useEffect(()=>{
 			if(!editorRef.current) return;
 
-			// create initial editor state
 			const state = EditorState.create({
 				doc        : value,
 				extensions : createExtensions({ onChange, language, editorTheme }),
@@ -276,7 +124,6 @@ const CodeEditor = forwardRef(
 				parent : editorRef.current,
 			});
 
-			// save initial state for current tab
 			docsRef.current[tab] = state;
 
 			return ()=>viewRef.current?.destroy();
@@ -289,10 +136,8 @@ const CodeEditor = forwardRef(
 			const prevTab = prevTabRef.current;
 
 			if(prevTab !== tab) {
-				// save current state
 				docsRef.current[prevTab] = view.state;
 
-				// restore or create
 				let nextState = docsRef.current[tab];
 
 				if(!nextState) {
