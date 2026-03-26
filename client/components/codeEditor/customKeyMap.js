@@ -1,28 +1,28 @@
 import { keymap } from '@codemirror/view';
 
-const indentMore = (view) => {
-  const { from, to } = view.state.selection.main;
-  const lines = [];
-  for (let l = view.state.doc.lineAt(from).number; l <= view.state.doc.lineAt(to).number; l++) {
-    const line = view.state.doc.line(l);
-    lines.push({ from: line.from, to: line.from, insert: '  ' }); // 2 spaces for tab
-  }
-  view.dispatch({ changes: lines });
-  return true;
+const indentMore = (view)=>{
+	const { from, to } = view.state.selection.main;
+	const lines = [];
+	for (let l = view.state.doc.lineAt(from).number; l <= view.state.doc.lineAt(to).number; l++) {
+		const line = view.state.doc.line(l);
+		lines.push({ from: line.from, to: line.from, insert: '  ' }); // 2 spaces for tab
+	}
+	view.dispatch({ changes: lines });
+	return true;
 };
 
-const indentLess = (view) => {
-  const { from, to } = view.state.selection.main;
-  const lines = [];
-  for (let l = view.state.doc.lineAt(from).number; l <= view.state.doc.lineAt(to).number; l++) {
-    const line = view.state.doc.line(l);
-    const match = line.text.match(/^ {1,2}/); // match up to 2 spaces
-    if (match) {
-      lines.push({ from: line.from, to: line.from + match[0].length, insert: '' });
-    }
-  }
-  if (lines.length > 0) view.dispatch({ changes: lines });
-  return true;
+const indentLess = (view)=>{
+	const { from, to } = view.state.selection.main;
+	const lines = [];
+	for (let l = view.state.doc.lineAt(from).number; l <= view.state.doc.lineAt(to).number; l++) {
+		const line = view.state.doc.line(l);
+		const match = line.text.match(/^ {1,2}/); // match up to 2 spaces
+		if(match) {
+			lines.push({ from: line.from, to: line.from + match[0].length, insert: '' });
+		}
+	}
+	if(lines.length > 0) view.dispatch({ changes: lines });
+	return true;
 };
 
 const makeBold = (view)=>{
@@ -197,8 +197,8 @@ const newPage = (view)=>{
 };
 
 export const customKeymap = keymap.of([
-	{ key: 'Tab', run: indentMore },
-	{ key: 'Shift-Tab', run: indentLess },
+	{ key: 'Shift-Tab', run: indentMore },
+	{ key: 'Mod-Shift-Tab', run: indentLess },
 	{ key: 'Mod-b', run: makeBold },
 	{ key: 'Mod-i', run: makeItalic },
 	{ key: 'Mod-u', run: makeUnderline },
