@@ -31,7 +31,6 @@ export const homebreweryFold = foldService.of((state, lineStart)=>{
 	if(endLine === startLine.number) return null;
 
 	const widgetObject = { from: startLine.from, to: doc.line(endLine).to };
-	console.log(widgetObject);
 
 	return widgetObject;
 });

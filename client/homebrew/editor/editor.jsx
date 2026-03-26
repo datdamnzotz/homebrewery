@@ -447,6 +447,7 @@ const Editor = createReactClass({
 					value={this.props.brew.text}
 					onChange={this.props.onBrewChange('text')}
 					editorTheme={this.state.editorTheme}
+					renderer={this.props.brew.renderer}
 					rerenderParent={this.rerenderParent}
 					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }} />
 			</>;
@@ -462,6 +463,7 @@ const Editor = createReactClass({
 					onChange={this.props.onBrewChange('style')}
 					enableFolding={true}
 					editorTheme={this.state.editorTheme}
+					renderer={this.props.brew.renderer}
 					rerenderParent={this.rerenderParent}
 					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }} />
 			</>;
@@ -492,6 +494,7 @@ const Editor = createReactClass({
 					onChange={this.props.onBrewChange('snippets')}
 					enableFolding={true}
 					editorTheme={this.state.editorTheme}
+					renderer={this.props.brew.renderer}
 					rerenderParent={this.rerenderParent}
 					style={{  height: `calc(100% -${this.state.snippetBarHeight}px)` }} />
 			</>;

@@ -8,6 +8,8 @@ import {
 	highlightActiveLineGutter,
 	highlightActiveLine,
 	scrollPastEnd,
+	Decoration,
+	ViewPlugin,
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
@@ -19,8 +21,50 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import * as themes from '@uiw/codemirror-themes-all';
 const themeCompartment = new Compartment();
 
-import { customHighlightPlugin, customHighlightStyle } from './customHighlight.js';
+const highlightCompartment = new Compartment();
+
 import { homebreweryFold, hbFolding } from './customFolding.js';
+import { customHighlightStyle, tokenizeCustomMarkdown } from './customHighlight.js';
+import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js'; //only makes highlight for
+
+const createHighlightPlugin = (renderer)=>{
+	console.log(renderer);
+	const tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
+
+	return ViewPlugin.fromClass(
+		class {
+			constructor(view) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update) {
+				if(update.docChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view) {
+				const decos = [];
+				const tokens = tokenize(view.state.doc.toString());
+
+				tokens.forEach((tok)=>{
+					const line = view.state.doc.line(tok.line + 1);
+
+					if(tok.from != null && tok.to != null && tok.from < tok.to) {
+						decos.push(
+							Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to)
+						);
+					} else {
+						decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
+					}
+				});
+
+				decos.sort((a, b)=>a.from - b.from || a.to - b.to);
+				return Decoration.set(decos);
+			}
+		},
+		{ decorations: (v)=>v.decorations }
+	);
+};
+
 
 const CodeEditor = forwardRef(
 	(
@@ -32,6 +76,7 @@ const CodeEditor = forwardRef(
 			editorTheme = 'default',
 			view,
 			style,
+			renderer,
 			...props
 		},
 		ref,
@@ -79,10 +124,23 @@ const CodeEditor = forwardRef(
 				{ key: 'Mod-i', run: italicCommand },
 			]);
 
+			const highlightExtension = renderer === 'V3'
+  			? syntaxHighlighting(customHighlightStyle)
+  			: syntaxHighlighting(legacyCustomHighlightStyle);
+
+			const customHighlightPlugin = createHighlightPlugin(renderer);
+
+			const combinedHighlight = [
+				customHighlightPlugin,
+				highlightExtension,
+			];
+
+
 			const languageExtension =
 				language === 'css' ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
 
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
+
 
 			return [
 				history(),
@@ -107,7 +165,7 @@ const CodeEditor = forwardRef(
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
 				customHighlightPlugin,
-				syntaxHighlighting(customHighlightStyle),
+				highlightCompartment.of(combinedHighlight),
 			];
 		};
 
@@ -175,6 +233,21 @@ const CodeEditor = forwardRef(
 				effects : themeCompartment.reconfigure(themeExtension),
 			});
 		}, [editorTheme]);
+		useEffect(()=>{
+			const view = viewRef.current;
+			if(!view) return;
+
+			const highlightExtension =
+    renderer === 'V3'
+    	? syntaxHighlighting(customHighlightStyle)
+    	: syntaxHighlighting(legacyCustomHighlightStyle);
+
+			const customHighlightPlugin = createHighlightPlugin(renderer);
+
+			view.dispatch({
+				effects : highlightCompartment.reconfigure([customHighlightPlugin, highlightExtension]),
+			});
+		}, [renderer]);
 
 		useImperativeHandle(ref, ()=>({
 			getValue : ()=>viewRef.current.state.doc.toString(),

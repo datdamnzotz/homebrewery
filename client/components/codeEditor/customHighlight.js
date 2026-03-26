@@ -1,9 +1,5 @@
 import { HighlightStyle } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
-import {
-	Decoration,
-	ViewPlugin,
-} from '@codemirror/view';
 
 // Making the tokens
 const customTags = {
@@ -23,7 +19,7 @@ const customTags = {
 	definitionColon : 'definitionColon', // .cm-definitionColon
 };
 
-function tokenizeCustomMarkdown(text) {
+export function tokenizeCustomMarkdown(text) {
 	const tokens = [];
 	const lines = text.split('\n');
 
@@ -39,7 +35,18 @@ function tokenizeCustomMarkdown(text) {
 		if(/\\snippet/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetBreak });
 
 		// --- Emoji ---
-		if(/:\w+?:/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.emoji });
+		if(/:.\w+?:/.test(lineText)) {
+			const emojiRegex = /(:\w+?:)/g;
+			let match;
+			while ((match = emojiRegex.exec(lineText)) !== null) {
+				tokens.push({
+					line : lineNumber,
+					type : customTags.emoji,
+					from : match.index,
+					to   : match.index + match[0].length,
+				});
+			}
+		}
 
 		// --- Superscript / Subscript ---
 		if(/\^/.test(lineText)) {
@@ -243,41 +250,5 @@ export const customHighlightStyle = HighlightStyle.define([
 	{ tag: customTags.definitionDesc, class: 'cm-dd', color: '#070' },
 ]);
 
-export const customHighlightPlugin = ViewPlugin.fromClass(
-	class {
-		constructor(view) {
-			this.decorations = this.buildDecorations(view);
-		}
-		update(update) {
-			if(update.docChanged) {
-				this.decorations = this.buildDecorations(update.view);
-			}
-		}
-		buildDecorations(view) {
-			const decos = [];
-			const tokens = tokenizeCustomMarkdown(view.state.doc.toString());
 
-			tokens.forEach((tok)=>{
-				const line = view.state.doc.line(tok.line + 1);
 
-				if(tok.from != null && tok.to != null && tok.from < tok.to) {
-					// inline decoration
-					decos.push(
-						Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to),
-					);
-				} else {
-					// full-line decoration
-					decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
-				}
-			});
-
-			// sort by absolute start position
-			decos.sort((a, b)=>a.from - b.from || a.to - b.to);
-
-			return Decoration.set(decos);
-		}
-	},
-	{
-		decorations : (v)=>v.decorations,
-	},
-);
