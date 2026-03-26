@@ -20,9 +20,9 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 
 import * as themes from '@uiw/codemirror-themes-all';
 const themeCompartment = new Compartment();
-
 const highlightCompartment = new Compartment();
 
+import { customKeymap } from './customKeyMap.js';
 import { homebreweryFold, hbFolding } from './customFolding.js';
 import { customHighlightStyle, tokenizeCustomMarkdown } from './customHighlight.js';
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js'; //only makes highlight for
@@ -64,7 +64,6 @@ const createHighlightPlugin = (renderer)=>{
 	);
 };
 
-
 const CodeEditor = forwardRef(
 	(
 		{
@@ -92,37 +91,6 @@ const CodeEditor = forwardRef(
 				}
 			});
 
-			const boldCommand = (view)=>{
-				const { from, to } = view.state.selection.main;
-				const selected = view.state.doc.sliceString(from, to);
-				const text = `**${selected}**`;
-
-				view.dispatch({
-					changes   : { from, to, insert: text },
-					selection : { anchor: from + text.length },
-				});
-
-				return true;
-			};
-
-			const italicCommand = (view)=>{
-				const { from, to } = view.state.selection.main;
-				const selected = view.state.doc.sliceString(from, to);
-				const text = `*${selected}*`;
-
-				view.dispatch({
-					changes   : { from, to, insert: text },
-					selection : { anchor: from + text.length },
-				});
-
-				return true;
-			};
-
-			const customKeymap = keymap.of([
-				{ key: 'Mod-b', run: boldCommand },
-				{ key: 'Mod-i', run: italicCommand },
-			]);
-
 			const highlightExtension = renderer === 'V3'
   			? syntaxHighlighting(customHighlightStyle)
   			: syntaxHighlighting(legacyCustomHighlightStyle);
@@ -134,12 +102,9 @@ const CodeEditor = forwardRef(
 				highlightExtension,
 			];
 
-
-			const languageExtension =
-				language === 'css' ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
+			const languageExtension = language === 'css' ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
 
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
-
 
 			return [
 				history(),
