@@ -10,6 +10,7 @@ import {
 	scrollPastEnd,
 	Decoration,
 	ViewPlugin,
+	WidgetType
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
@@ -27,8 +28,23 @@ import { homebreweryFold, hbFolding } from './customFolding.js';
 import { customHighlightStyle, tokenizeCustomMarkdown } from './customHighlight.js';
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js'; //only makes highlight for
 
-const createHighlightPlugin = (renderer)=>{
+const createHighlightPlugin = (renderer, tab)=>{
 	const tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
+
+class countWidget extends WidgetType {
+    constructor(count) {
+        super();
+        this.count = count;
+    }
+    toDOM() {
+        const span = document.createElement("span");
+        span.className = "cm-page-count";
+        span.textContent = this.count;
+        span.style.color = "#989898";
+        return span;
+    }
+    ignoreEvent() { return true; }
+}
 
 	return ViewPlugin.fromClass(
 		class {
@@ -44,15 +60,24 @@ const createHighlightPlugin = (renderer)=>{
 				const decos = [];
 				const tokens = tokenize(view.state.doc.toString());
 
+				let pageCount = 1;
 				tokens.forEach((tok)=>{
 					const line = view.state.doc.line(tok.line + 1);
 
 					if(tok.from != null && tok.to != null && tok.from < tok.to) {
+
 						decos.push(
 							Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to)
+
 						);
+
 					} else {
 						decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
+						if(tok.type === 'pageLine') {
+							pageCount++;
+							line.from === 0 && pageCount--;
+							decos.push(Decoration.widget({ widget: new countWidget(pageCount), side: 2 }).range(line.to));
+						}
 					}
 				});
 
