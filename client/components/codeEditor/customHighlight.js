@@ -3,20 +3,19 @@ import { tags } from '@lezer/highlight';
 
 // Making the tokens
 const customTags = {
-	pageLine        : 'pageLine', // .cm-pageLine
-	snippetLine     : 'snippetLine', // .cm-snippetLine
-	columnSplit     : 'columnSplit', // .cm-columnSplit
-	snippetBreak    : 'snippetBreak', // .cm-snippetBreak
-	block           : 'block', // .cm-block
-	inlineBlock     : 'inline-block', // .cm-inline-block
-	injection       : 'injection', // .cm-injection
-	emoji           : 'emoji', // .cm-emoji
-	superscript     : 'superscript', // .cm-superscript
-	subscript       : 'subscript', // .cm-subscript
+	pageLine        : 'pageLine', 		// .cm-pageLine
+	snippetLine     : 'snippetLine', 	// .cm-snippetLine
+	columnSplit     : 'columnSplit', 	// .cm-columnSplit
+	block           : 'block', 			// .cm-block
+	inlineBlock     : 'inline-block', 	// .cm-inline-block
+	injection       : 'injection', 		// .cm-injection
+	emoji           : 'emoji', 			// .cm-emoji
+	superscript     : 'superscript', 	// .cm-superscript
+	subscript       : 'subscript', 		// .cm-subscript
 	definitionList  : 'definitionList', // .cm-definitionList
 	definitionTerm  : 'definitionTerm', // .cm-definitionTerm
 	definitionDesc  : 'definitionDesc', // .cm-definitionDesc
-	definitionColon : 'definitionColon', // .cm-definitionColon
+	definitionColon : 'definitionColon',// .cm-definitionColon
 };
 
 export function tokenizeCustomMarkdown(text) {
@@ -32,7 +31,6 @@ export function tokenizeCustomMarkdown(text) {
 		if(/^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m.test(lineText)) tokens.push({ line: lineNumber, type: customTags.pageLine });
 		if(/^\\snippet\ .*$/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetLine });
 		if(/^\\column(?:break)?$/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.columnSplit });
-		if(/\\snippet/.test(lineText)) tokens.push({ line: lineNumber, type: customTags.snippetBreak });
 
 		// --- Emoji ---
 		if(/:.\w+?:/.test(lineText)) {
@@ -230,8 +228,6 @@ export function tokenizeCustomMarkdown(text) {
 			if(match) endCh = match.index + match[0].length;
 			tokens.push({ line: lineNumber, type: customTags.block });
 		}
-
-
 	});
 
 	return tokens;
@@ -241,7 +237,7 @@ export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.heading1, color: '#000', fontWeight: '700' },
 	{ tag: tags.keyword, color: '#07a' }, // example for your markdown headings
 	{ tag: customTags.pageLine, color: '#f0a' },
-	{ tag: customTags.snippetBreak, class: 'cm-snippet-break', color: '#0af' },
+	{ tag: customTags.snippetLine, class: 'cm-snippetLine', color: '#0af' },
 	{ tag: customTags.inlineBlock, class: 'cm-inline-block', backgroundColor: '#fffae6' },
 	{ tag: customTags.emoji, class: 'cm-emoji', color: '#fa0' },
 	{ tag: customTags.superscript, class: 'cm-superscript', verticalAlign: 'super', fontSize: '0.8em' },

@@ -28,7 +28,6 @@ import { customHighlightStyle, tokenizeCustomMarkdown } from './customHighlight.
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js'; //only makes highlight for
 
 const createHighlightPlugin = (renderer)=>{
-	console.log(renderer);
 	const tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
 
 	return ViewPlugin.fromClass(
@@ -164,7 +163,6 @@ const CodeEditor = forwardRef(
 
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
-				customHighlightPlugin,
 				highlightCompartment.of(combinedHighlight),
 			];
 		};
@@ -237,10 +235,9 @@ const CodeEditor = forwardRef(
 			const view = viewRef.current;
 			if(!view) return;
 
-			const highlightExtension =
-    renderer === 'V3'
-    	? syntaxHighlighting(customHighlightStyle)
-    	: syntaxHighlighting(legacyCustomHighlightStyle);
+			const highlightExtension =renderer === 'V3'
+    		? syntaxHighlighting(customHighlightStyle)
+    		: syntaxHighlighting(legacyCustomHighlightStyle);
 
 			const customHighlightPlugin = createHighlightPlugin(renderer);
 
@@ -294,7 +291,7 @@ const CodeEditor = forwardRef(
 			focus : ()=>viewRef.current.focus(),
 		}));
 
-		return <div className='codeEditor' ref={editorRef} style={style} />;
+		return <div className={`codeEditor ${tab}`} ref={editorRef} style={style} />;
 	},
 );
 
