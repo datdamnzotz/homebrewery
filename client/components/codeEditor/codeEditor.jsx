@@ -39,7 +39,7 @@ const createHighlightPlugin = (renderer, tab)=>{
 		}
 		toDOM() {
 			const span = document.createElement('span');
-			span.className = 'cm-page-count';
+			span.className = 'cm-count';
 			span.textContent = this.count;
 			span.style.color = '#989898';
 			return span;
@@ -62,6 +62,7 @@ const createHighlightPlugin = (renderer, tab)=>{
 				const tokens = tokenize(view.state.doc.toString());
 
 				let pageCount = 1;
+				let snippetCount = 0;
 				tokens.forEach((tok)=>{
 					const line = view.state.doc.line(tok.line + 1);
 
@@ -74,10 +75,14 @@ const createHighlightPlugin = (renderer, tab)=>{
 
 					} else {
 						decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
-						if(tok.type === 'pageLine') {
+						if(tok.type === 'pageLine'  && tab === "brewText") {
 							pageCount++;
 							line.from === 0 && pageCount--;
 							decos.push(Decoration.widget({ widget: new countWidget(pageCount), side: 2 }).range(line.to));
+						}
+						if(tok.type === 'snippetLine' && tab === "brewSnippets") {
+							snippetCount++;
+							decos.push(Decoration.widget({ widget: new countWidget(snippetCount), side: 2 }).range(line.to));
 						}
 					}
 				});
@@ -121,7 +126,7 @@ const CodeEditor = forwardRef(
   			? syntaxHighlighting(customHighlightStyle)
   			: syntaxHighlighting(legacyCustomHighlightStyle);
 
-			const customHighlightPlugin = createHighlightPlugin(renderer);
+			const customHighlightPlugin = createHighlightPlugin(renderer, tab);
 
 			const combinedHighlight = [
 				customHighlightPlugin,
@@ -231,7 +236,7 @@ const CodeEditor = forwardRef(
     		? syntaxHighlighting(customHighlightStyle)
     		: syntaxHighlighting(legacyCustomHighlightStyle);
 
-			const customHighlightPlugin = createHighlightPlugin(renderer);
+			const customHighlightPlugin = createHighlightPlugin(renderer, tab);
 
 			view.dispatch({
 				effects : highlightCompartment.reconfigure([customHighlightPlugin, highlightExtension]),
