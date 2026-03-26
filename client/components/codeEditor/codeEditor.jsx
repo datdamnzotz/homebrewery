@@ -19,6 +19,7 @@ import { languages } from '@codemirror/language-data';
 import { css } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { autocompleteEmoji } from './autocompleteEmoji.js';
+import { searchKeymap, highlightSelectionMatches, search, openSearchPanel } from '@codemirror/search';
 
 import * as themes from '@uiw/codemirror-themes-all';
 const themeCompartment = new Compartment();
@@ -139,8 +140,7 @@ const CodeEditor = forwardRef(
 
 			return [
 				history(),
-				keymap.of(defaultKeymap),
-				customKeymap,
+				keymap.of([...defaultKeymap, customKeymap, foldKeymap, ...searchKeymap]),
 				updateListener,
 				EditorView.lineWrapping,
 				scrollPastEnd(),
@@ -150,7 +150,6 @@ const CodeEditor = forwardRef(
 				homebreweryFold,
 				hbFolding,
 
-				keymap.of(foldKeymap),
 				foldGutter({
 					openText   : '▾',
 					closedText : '▸'
@@ -161,6 +160,7 @@ const CodeEditor = forwardRef(
 				highlightActiveLineGutter(),
 				highlightCompartment.of(combinedHighlight),
 				autocompleteEmoji,
+				search(),
 			];
 		};
 
