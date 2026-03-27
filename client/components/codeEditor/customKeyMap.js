@@ -207,7 +207,7 @@ const newPage = (view)=>{
 	return true;
 };
 
-export const customKeymap = keymap.of([
+export default keymap.of([
 	{ key: 'Tab', run: insertTabAtCursor },
 	{ key: 'Shift-Tab', run: indentMore },
 	{ key: 'Mod-Shift-Tab', run: indentLess },

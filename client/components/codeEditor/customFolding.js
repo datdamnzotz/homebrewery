@@ -1,50 +1,46 @@
-import { foldService } from '@codemirror/language';
-import { codeFolding } from '@codemirror/language';
+import { foldService, codeFolding } from '@codemirror/language';
 
-export function getFoldPreview(state, from, to) {
-	const doc = state.doc;
-	const start = doc.lineAt(from).number;
-	const end = doc.lineAt(to).number;
+const pageFoldExtension = [
+	foldService.of((state, lineStart)=>{
+		const doc = state.doc;
+		const matcher = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
 
-	if(doc.line(start).text.trim()) return ` ↤ Lines ${start}-${end} ↦`;
+		const startLine = doc.lineAt(lineStart);
+		const prevLineText = startLine.number > 1 ? doc.line(startLine.number - 1).text : '';
 
-	const preview = Array.from({ length: end - start }, (_, i)=>doc.line(start + 1 + i).text.trim())
-		.find(Boolean) || `Lines ${start}-${end}`;
+		if(startLine.number > 1 && !matcher.test(prevLineText)) return null;
 
-	return ` ↤ ${preview.replace('{', '').slice(0, 50).trim()}${preview.length > 50 ? '...' : ''} ↦`;
-}
+		let endLine = startLine.number;
+		while (endLine < doc.lines && !matcher.test(doc.line(endLine + 1).text)) {
+			endLine++;
+		}
 
-export const homebreweryFold = foldService.of((state, lineStart)=>{
-	const doc = state.doc;
-	const matcher = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
+		if(endLine === startLine.number) return null;
 
-	const startLine = doc.lineAt(lineStart);
-	const prevLineText = startLine.number > 1 ? doc.line(startLine.number - 1).text : '';
+		return { from: startLine.from, to: doc.line(endLine).to };
+	}),
+	codeFolding({
+		preparePlaceholder : (state, range)=>{
+			const doc = state.doc;
+			const start = doc.lineAt(range.from).number;
+			const end = doc.lineAt(range.to).number;
 
-	if(startLine.number > 1 && !matcher.test(prevLineText)) return null;
+			if(doc.line(start).text.trim()) return ` ↤ Lines ${start}-${end} ↦`;
 
-	let endLine = startLine.number;
-	while (endLine < doc.lines && !matcher.test(doc.line(endLine + 1).text)) {
-		endLine++;
-	}
+			const preview = Array.from({ length: end - start }, (_, i)=>doc.line(start + 1 + i).text.trim()
+			).find(Boolean) || `Lines ${start}-${end}`;
 
-	if(endLine === startLine.number) return null;
+			return ` ↤ ${preview.replace('{', '').slice(0, 50).trim()}${preview.length > 50 ? '...' : ''} ↦`;
+		},
+		placeholderDOM(view, onclick, prepared) {
+			const span = document.createElement('span');
+			span.className = 'cm-fold-placeholder';
+			span.textContent = prepared;
+			span.onclick = onclick;
+			span.style.color = '#989898';
+			return span;
+		},
+	}),
+];
 
-	const widgetObject = { from: startLine.from, to: doc.line(endLine).to };
-
-	return widgetObject;
-});
-
-export const hbFolding = codeFolding({
-	preparePlaceholder : (state, range)=>{
-		return getFoldPreview(state, range.from, range.to);
-	},
-	placeholderDOM(view, onclick, prepared) {
-		const span = document.createElement('span');
-		span.className = 'cm-fold-placeholder';
-		span.textContent = prepared;
-		span.onclick = onclick;
-		span.style.color = '#989898';
-		return span;
-	},
-});
+export default pageFoldExtension;

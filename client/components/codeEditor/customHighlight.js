@@ -19,7 +19,7 @@ const customTags = {
 
 	//CSS
 
-	variable  : 'variable',
+	variable : 'variable',
 };
 
 export function tokenizeCustomMarkdown(text) {
@@ -262,13 +262,15 @@ export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.heading4,  class: 'cm-header cm-header-4' },
 	{ tag: tags.heading5,  class: 'cm-header cm-header-5' },
 	{ tag: tags.heading6,  class: 'cm-header cm-header-6' },
-
 	{ tag: tags.link,  class: 'cm-link' },
 	{ tag: tags.string,  class: 'cm-string' },
 	{ tag: tags.url,  class: 'cm-string cm-url' },
 	{ tag: tags.list,  class: 'cm-list' },
 	{ tag: tags.strong,  class: 'cm-strong' },
 	{ tag: tags.emphasis,  class: 'cm-em' },
+	{ tag: tags.quote,  class: 'cm-quote' },
+	
+	//css tags
 
 	{ tag: tags.tagName,  class: 'cm-tag' },
 	{ tag: tags.className,  class: 'cm-class' },
@@ -283,6 +285,8 @@ export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.variableName,  class: 'cm-variable' },
 	{ tag: tags.invalid,  class: 'cm-error' },
 	{ tag: tags.comment,  class: 'cm-comment' },
+
+	//custom tags
 
 	{ tag: customTags.pageLine, color: '#f0a' },
 	{ tag: customTags.snippetLine, class: 'cm-snippetLine', color: '#0af' },

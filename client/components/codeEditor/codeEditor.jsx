@@ -24,16 +24,16 @@ import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
 
 import * as themesImport from '@uiw/codemirror-themes-all';
-import { defaultCM5Theme } from '@themes/codeMirror/customThemes/default.js';
+import defaultCM5Theme from '@themes/codeMirror/customThemes/default.js';
 
 const themes = { default: defaultCM5Theme, ...themesImport };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
 
-import { customKeymap } from './customKeyMap.js';
-import { homebreweryFold, hbFolding } from './customFolding.js';
+import customKeymap from './customKeyMap.js';
+import pageFoldExtension from './customFolding.js';
 import { customHighlightStyle, tokenizeCustomMarkdown, tokenizeCustomCSS } from './customHighlight.js';
-import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js'; //only makes highlight for
+import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js';
 
 const createHighlightPlugin = (renderer, tab)=>{
 	let tokenize;
@@ -131,7 +131,7 @@ const CodeEditor = forwardRef(
 		const prevTabRef = useRef(tab);
 
 		const createExtensions = ({ onChange, language, editorTheme })=>{
-			const updateListener = EditorView.updateListener.of((update)=>{
+			const setEventListeners = EditorView.updateListener.of((update)=>{
 				if(update.docChanged) {
 					onChange(update.state.doc.toString());
 				}
@@ -155,26 +155,17 @@ const CodeEditor = forwardRef(
 
 			const customHighlightPlugin = createHighlightPlugin(renderer, tab);
 
-			const combinedHighlight = [
-				customHighlightPlugin,
-				highlightExtension,
-			];
-
 			const languageExtension = language === 'css' ? [css(), cssLanguage] : markdown({ base: markdownLanguage, codeLanguages: languages });
-
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
 
 			return [
-				history(),
-
-				updateListener,
+				history(), //allows for undo and redo
+				setEventListeners,
 				EditorView.lineWrapping,
 				scrollPastEnd(),
 				languageExtension,
-
 				lineNumbers(),
-				homebreweryFold,
-				hbFolding,
+				pageFoldExtension,
 
 				foldGutter({
 					openText   : '▾',
@@ -183,7 +174,7 @@ const CodeEditor = forwardRef(
 
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
-				highlightCompartment.of(combinedHighlight),
+				highlightCompartment.of([customHighlightPlugin,highlightExtension]),
 				themeCompartment.of(themeExtension),
 				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
 				search(),
