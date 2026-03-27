@@ -1,4 +1,3 @@
-// themes/codeMirror/customThemes/default.js
 import { EditorView } from '@codemirror/view';
 
 //This theme is made of the base css for the codemirror 5 editor
@@ -37,7 +36,7 @@ export default EditorView.theme({
 		backgroundColor : '#7e7',
 		caretColor      : 'transparent',
 	},
-	'.cm-activeline-background' : {
+	'.cm-activeLine' : {
 		backgroundColor : '#e8f2ff',
 	},
 	'.cm-selected' : {
@@ -50,7 +49,6 @@ export default EditorView.theme({
 		cursor     : 'pointer',
 	},
 
-	// Semantic classes
 	'.cm-header'                         : { color: 'blue', fontWeight: 'bold' },
 	'.cm-strong'                         : { fontWeight: 'bold' },
 	'.cm-em'                             : { fontStyle: 'italic' },
@@ -75,6 +73,6 @@ export default EditorView.theme({
 	'.cm-error, .cm-invalidchar'         : { color: '#f00' },
 	'.cm-matchingbracket'                : { color: '#0b0' },
 	'.cm-nonmatchingbracket'             : { color: '#a22' },
-	'.cm-matchingtag'                    : { backgroundColor: 'rgba(255, 150, 0, 0.3)' },
+	'.cm-matchingtag'                    : { backgroundColor: '#ff96004d' },
 	'.cm-quote'                          : { color: '#090' },
 }, { dark: false });

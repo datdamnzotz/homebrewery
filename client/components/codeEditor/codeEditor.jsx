@@ -25,8 +25,9 @@ import { searchKeymap, search } from '@codemirror/search';
 
 import * as themesImport from '@uiw/codemirror-themes-all';
 import defaultCM5Theme from '@themes/codeMirror/customThemes/default.js';
+import darkbrewery from '../../../themes/codeMirror/customThemes/darkbrewery.js';
 
-const themes = { default: defaultCM5Theme, ...themesImport };
+const themes = { default: defaultCM5Theme, darkbrewery, ...themesImport };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
 
