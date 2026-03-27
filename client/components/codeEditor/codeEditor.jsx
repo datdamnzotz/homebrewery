@@ -11,7 +11,8 @@ import {
 	scrollPastEnd,
 	Decoration,
 	ViewPlugin,
-	WidgetType
+	WidgetType,
+	drawSelection,
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
@@ -37,11 +38,11 @@ import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './lega
 const createHighlightPlugin = (renderer, tab)=>{
 	let tokenize;
 
-if (tab === "brewStyles") {
-  tokenize = tokenizeCustomCSS;
-} else {
-  tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
-}
+	if(tab === 'brewStyles') {
+		tokenize = tokenizeCustomCSS;
+	} else {
+		tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
+	}
 	/* eslint-disable no-restricted-syntax */
 	class countWidget extends WidgetType {
 		constructor(count) {
@@ -187,7 +188,9 @@ const CodeEditor = forwardRef(
 				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
 				search(),
 				keymap.of([...defaultKeymap, foldKeymap, ...searchKeymap]),
-				customKeymap
+				customKeymap,
+				drawSelection(),
+				EditorState.allowMultipleSelections.of(true),
 			];
 		};
 
@@ -282,16 +285,23 @@ const CodeEditor = forwardRef(
 
 			injectText : (text)=>{
 				const view = viewRef.current;
-				const { from, to } = view.state.selection.main;
+				const changes = view.state.selection.ranges.map((range)=>({
+					from   : range.from,
+					to     : range.to,
+					insert : text
+				}));
+
+				const newRanges = view.state.selection.ranges.map((range)=>({
+					anchor : range.from + text.length
+				}));
 
 				view.dispatch({
-					changes   : { from, to, insert: text },
-					selection : { anchor: from + text.length },
+					changes,
+					selection : { ranges: newRanges }
 				});
 
 				view.focus();
 			},
-
 			getCursorPosition : ()=>viewRef.current.state.selection.main.head,
 
 			getScrollTop : ()=>viewRef.current.scrollDOM.scrollTop,

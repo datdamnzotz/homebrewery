@@ -2,15 +2,13 @@
 import { keymap } from '@codemirror/view';
 import { undo, redo } from '@codemirror/commands';
 
-const insertTabAtCursor = (view) => {
-  const { from } = view.state.selection.main;
-
-  view.dispatch({
-    changes: { from, insert: '	' },
-    selection: { anchor: from + 1 }
-  });
-
-  return true;
+const insertTabAtCursor = (view)=>{
+	const { from } = view.state.selection.main;
+	view.dispatch({
+		changes   : { from, insert: '	' },
+		selection : { anchor: from + 1 }
+	});
+	return true;
 };
 
 const indentMore = (view)=>{

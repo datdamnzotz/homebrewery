@@ -17,10 +17,9 @@ const customTags = {
 	definitionDesc  : 'definitionDesc', // .cm-definitionDesc
 	definitionColon : 'definitionColon', // .cm-definitionColon
 
-	//CSS 
+	//CSS
 
-	variable: 'variable',
-	colorMark: 'colorMark',
+	variable  : 'variable',
 };
 
 export function tokenizeCustomMarkdown(text) {
@@ -237,7 +236,7 @@ export function tokenizeCustomCSS(text) {
 	const lines = text.split('\n');
 
 	lines.forEach((lineText, lineNumber)=>{
-		
+
 		if(/--[a-zA-Z0-9-_]+/gm.test(lineText)) {
 			const varRegex =/--[a-zA-Z0-9-_]+/gm;
 			let match;
