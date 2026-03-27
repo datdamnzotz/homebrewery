@@ -165,7 +165,7 @@ const CodeEditor = forwardRef(
 
 			return [
 				history(),
-				keymap.of([...defaultKeymap, customKeymap, foldKeymap, ...searchKeymap]),
+
 				updateListener,
 				EditorView.lineWrapping,
 				scrollPastEnd(),
@@ -186,6 +186,8 @@ const CodeEditor = forwardRef(
 				themeCompartment.of(themeExtension),
 				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
 				search(),
+				keymap.of([...defaultKeymap, foldKeymap, ...searchKeymap]),
+				customKeymap
 			];
 		};
 

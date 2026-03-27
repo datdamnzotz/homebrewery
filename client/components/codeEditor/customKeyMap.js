@@ -2,6 +2,17 @@
 import { keymap } from '@codemirror/view';
 import { undo, redo } from '@codemirror/commands';
 
+const insertTabAtCursor = (view) => {
+  const { from } = view.state.selection.main;
+
+  view.dispatch({
+    changes: { from, insert: '	' },
+    selection: { anchor: from + 1 }
+  });
+
+  return true;
+};
+
 const indentMore = (view)=>{
 	const { from, to } = view.state.selection.main;
 	const lines = [];
@@ -199,6 +210,7 @@ const newPage = (view)=>{
 };
 
 export const customKeymap = keymap.of([
+	{ key: 'Tab', run: insertTabAtCursor },
 	{ key: 'Shift-Tab', run: indentMore },
 	{ key: 'Mod-Shift-Tab', run: indentLess },
 	{ key: 'Mod-b', run: makeBold },
