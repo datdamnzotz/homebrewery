@@ -1,3 +1,4 @@
+/* eslint max-lines: ["error", { "max": 300 }] */
 import { keymap } from '@codemirror/view';
 import { undo, redo } from '@codemirror/commands';
 

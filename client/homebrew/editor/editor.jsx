@@ -4,7 +4,6 @@ import React from 'react';
 import createReactClass from 'create-react-class';
 import _ from 'lodash';
 import dedent from 'dedent';
-import Markdown from '@shared/markdown.js';
 
 import CodeEditor from '../../components/codeEditor/codeEditor.jsx';
 import SnippetBar from './snippetbar/snippetbar.jsx';
@@ -13,7 +12,7 @@ import MetadataEditor from './metadataEditor/metadataEditor.jsx';
 const EDITOR_THEME_KEY = 'HB_editor_theme';
 
 const PAGEBREAK_REGEX_V3 = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
-const SNIPPETBREAK_REGEX_V3 = /^\\snippet\ .*$/;
+//const SNIPPETBREAK_REGEX_V3 = /^\\snippet\ .*$/;
 const DEFAULT_STYLE_TEXT = dedent`
 				/*=======---  Example CSS styling  ---=======*/
 				/* Any CSS here will apply to your document! */

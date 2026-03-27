@@ -15,16 +15,12 @@ const customTags = {
 	definitionList  : 'definitionList', // .cm-definitionList
 	definitionTerm  : 'definitionTerm', // .cm-definitionTerm
 	definitionDesc  : 'definitionDesc', // .cm-definitionDesc
-	definitionColon : 'definitionColon',// .cm-definitionColon
+	definitionColon : 'definitionColon', // .cm-definitionColon
 };
 
 export function tokenizeCustomMarkdown(text) {
 	const tokens = [];
 	const lines = text.split('\n');
-
-	// Track multi-line blocks
-	const inBlock = false;
-	const blockStart = 0;
 
 	lines.forEach((lineText, lineNumber)=>{
 		// --- Page / snippet lines ---
@@ -92,7 +88,6 @@ export function tokenizeCustomMarkdown(text) {
 			if(match) {
 				const [full, term, colons, desc] = match;
 				let offset = 0;
-
 				// Entire line as definitionList
 				tokens.push({
 					line : lineNumber,
@@ -131,7 +126,6 @@ export function tokenizeCustomMarkdown(text) {
 
 		// multiline def list
 		if(!/^::/.test(lines[lineNumber]) && lineNumber + 1 < lines.length && /^::/.test(lines[lineNumber + 1])) {
-			const term = lineText;
 			const startLine = lineNumber;
 			const defs = [];
 			let endLine = startLine;

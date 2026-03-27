@@ -1,3 +1,4 @@
+/* eslint max-lines: ["error", { "max": 400 }] */
 import './codeEditor.less';
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
@@ -19,7 +20,7 @@ import { languages } from '@codemirror/language-data';
 import { css } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { autocompleteEmoji } from './autocompleteEmoji.js';
-import { searchKeymap, highlightSelectionMatches, search, openSearchPanel } from '@codemirror/search';
+import { searchKeymap, search } from '@codemirror/search';
 
 import * as themes from '@uiw/codemirror-themes-all';
 const themeCompartment = new Compartment();
@@ -32,7 +33,7 @@ import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './lega
 
 const createHighlightPlugin = (renderer, tab)=>{
 	const tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
-
+	/* eslint-disable no-restricted-syntax */
 	class countWidget extends WidgetType {
 		constructor(count) {
 			super();
@@ -47,6 +48,7 @@ const createHighlightPlugin = (renderer, tab)=>{
 		}
 		ignoreEvent() { return true; }
 	}
+	/* eslint-enable no-restricted-syntax */
 
 	return ViewPlugin.fromClass(
 		class {
