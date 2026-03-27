@@ -17,7 +17,7 @@ import { EditorState, Compartment } from '@codemirror/state';
 import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, historyField, undo, redo } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
-import { css } from '@codemirror/lang-css';
+import { css, cssLanguage } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
@@ -31,11 +31,17 @@ const highlightCompartment = new Compartment();
 
 import { customKeymap } from './customKeyMap.js';
 import { homebreweryFold, hbFolding } from './customFolding.js';
-import { customHighlightStyle, tokenizeCustomMarkdown } from './customHighlight.js';
+import { customHighlightStyle, tokenizeCustomMarkdown, tokenizeCustomCSS } from './customHighlight.js';
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js'; //only makes highlight for
 
 const createHighlightPlugin = (renderer, tab)=>{
-	const tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
+	let tokenize;
+
+if (tab === "brewStyles") {
+  tokenize = tokenizeCustomCSS;
+} else {
+  tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
+}
 	/* eslint-disable no-restricted-syntax */
 	class countWidget extends WidgetType {
 		constructor(count) {
@@ -153,7 +159,7 @@ const CodeEditor = forwardRef(
 				highlightExtension,
 			];
 
-			const languageExtension = language === 'css' ? css() : markdown({ base: markdownLanguage, codeLanguages: languages });
+			const languageExtension = language === 'css' ? [css(), cssLanguage] : markdown({ base: markdownLanguage, codeLanguages: languages });
 
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
 
@@ -178,7 +184,7 @@ const CodeEditor = forwardRef(
 				highlightActiveLineGutter(),
 				highlightCompartment.of(combinedHighlight),
 				themeCompartment.of(themeExtension),
-				autocompleteEmoji,
+				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
 				search(),
 			];
 		};
