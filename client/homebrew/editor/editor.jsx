@@ -313,7 +313,7 @@ const Editor = createReactClass({
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
 					rerenderParent={this.rerenderParent}
-					style={{  height: `calc(100% -${this.state.snippetBarHeight}px)` }} />
+					style={{  height: `calc(100% - 25px)` }} />
 			</>;
 		}
 	},
