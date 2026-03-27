@@ -24,8 +24,8 @@ import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
 
 import * as themesImport from '@uiw/codemirror-themes-all';
-import defaultCM5Theme from '@themes/codeMirror/customThemes/default.js';
-import darkbrewery from '../../../themes/codeMirror/customThemes/darkbrewery.js';
+import defaultCM5Theme from '@themes/codeMirror/default.js';
+import darkbrewery from '@themes/codeMirror/darkbrewery.js';
 
 const themes = { default: defaultCM5Theme, darkbrewery, ...themesImport };
 const themeCompartment = new Compartment();

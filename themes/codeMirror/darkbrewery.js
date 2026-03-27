@@ -20,15 +20,15 @@ export default EditorView.theme({
 		backgroundColor : '#293134',
 		whiteSpace      : 'nowrap',
 	},
-    '.cm-foldGutter' : {
-		borderLeft    : '1px solid #555',
+	'.cm-foldGutter' : {
+		borderLeft      : '1px solid #555',
 		backgroundColor : '#293134',
 	},
-    '.cm-foldGutter:hover' : {
-        backgroundColor : '#555',
+	'.cm-foldGutter:hover' : {
+		backgroundColor : '#555',
 	},
-    '.cm-gutterElement' : {
-        color: '#81969a',
+	'.cm-gutterElement' : {
+		color : '#81969a',
 	},
 	'.cm-linenumber' : {
 		padding    : '0 3px 0 5px',
@@ -48,41 +48,41 @@ export default EditorView.theme({
 	'.cm-activeLine' : {
 		backgroundColor : '#868c9323',
 	},
-    '.cm-gutterElement.cm-activeLineGutter' : {
+	'.cm-gutterElement.cm-activeLineGutter' : {
 		backgroundColor : '#868c9323',
 	},
-    '.cm-activeLine' : {
+	'.cm-activeLine' : {
 		backgroundColor : '#868c9323',
 	},
 	'.cm-selected' : {
 		backgroundColor : '#d7d4f0',
 	},
-    '.cm-pageLine' : {
-        backgroundColor: '#7ca97c',
-        color: '#000',
-        fontWeight: 'bold',
-        letterSpacing: '.5px',
-        borderTop: '1px solid #ff0',
+	'.cm-pageLine' : {
+		backgroundColor : '#7ca97c',
+		color           : '#000',
+		fontWeight      : 'bold',
+		letterSpacing   : '.5px',
+		borderTop       : '1px solid #ff0',
 	},
-    '.cm-columnSplit' : {
-        backgroundColor: '#7ca97c',
-        color: 'black',
-        fontWeight: 'bold',
-        letterSpacing: '1px',
-        borderBottom: '1px solid #ff0',
+	'.cm-columnSplit' : {
+		backgroundColor : '#7ca97c',
+		color           : 'black',
+		fontWeight      : 'bold',
+		letterSpacing   : '1px',
+		borderBottom    : '1px solid #ff0',
 	},
-    '.cm-line.cm-block, .cm-line .cm-inline-block' : {
-        color: '#E3E3E3',
+	'.cm-line.cm-block, .cm-line .cm-inline-block' : {
+		color : '#E3E3E3',
 	},
-    '.cm-definitionList .cm-definitionTerm' : {
-        color: '#E3E3E3',
+	'.cm-definitionList .cm-definitionTerm' : {
+		color : '#E3E3E3',
 	},
-    '.cm-definitionList .cm-definitionColon' : {
-        backgroundColor: '#0000',
-        color: '#e3FF00',
+	'.cm-definitionList .cm-definitionColon' : {
+		backgroundColor : '#0000',
+		color           : '#e3FF00',
 	},
-    '.cm-definitionList .cm-definitionDesc' : {
-        color: '#b5858d',
+	'.cm-definitionList .cm-definitionDesc' : {
+		color : '#b5858d',
 	},
 
 	// Semantic classes
