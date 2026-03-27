@@ -76,12 +76,12 @@ const createHighlightPlugin = (renderer, tab)=>{
 
 					} else {
 						decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
-						if(tok.type === 'pageLine'  && tab === "brewText") {
+						if(tok.type === 'pageLine'  && tab === 'brewText') {
 							pageCount++;
 							line.from === 0 && pageCount--;
 							decos.push(Decoration.widget({ widget: new countWidget(pageCount), side: 2 }).range(line.to));
 						}
-						if(tok.type === 'snippetLine' && tab === "brewSnippets") {
+						if(tok.type === 'snippetLine' && tab === 'brewSnippets') {
 							snippetCount++;
 							decos.push(Decoration.widget({ widget: new countWidget(snippetCount), side: 2 }).range(line.to));
 						}
@@ -101,6 +101,8 @@ const CodeEditor = forwardRef(
 		{
 			value = '',
 			onChange = ()=>{},
+			onCursorChange = ()=>{},
+			onViewChange = ()=>{},
 			language = '',
 			tab = 'brewText',
 			editorTheme = 'default',
@@ -120,6 +122,18 @@ const CodeEditor = forwardRef(
 			const updateListener = EditorView.updateListener.of((update)=>{
 				if(update.docChanged) {
 					onChange(update.state.doc.toString());
+				}
+				if(update.selectionSet) {
+					const pos = update.state.selection.main.head;
+					const line = update.state.doc.lineAt(pos).number;
+
+					onCursorChange(line);
+				}
+				if(update.viewportChanged) {
+					const { from } = update.view.viewport;
+					const line = update.state.doc.lineAt(from).number;
+
+					onViewChange(line);
 				}
 			});
 
@@ -267,9 +281,29 @@ const CodeEditor = forwardRef(
 
 			getCursorPosition : ()=>viewRef.current.state.selection.main.head,
 
-			setCursorPosition : (pos)=>{
-				viewRef.current.dispatch({ selection: { anchor: pos } });
-				viewRef.current.focus();
+			getScrollTop : ()=>viewRef.current.scrollDOM.scrollTop,
+
+			scrollToY : (y)=>{
+				viewRef.current.scrollDOM.scrollTo({ top: y });
+			},
+
+			getLineTop : (lineNumber)=>{
+				const view = viewRef.current;
+				if(!view) return 0;
+
+				const line = view.state.doc.line(lineNumber);
+				return view.coordsAtPos(line.from)?.top ?? 0;
+			},
+
+			setCursorToLine : (lineNumber)=>{
+				const view = viewRef.current;
+				const line = view.state.doc.line(lineNumber);
+
+				view.dispatch({
+					selection : { anchor: line.from }
+				});
+
+				view.focus();
 			},
 
 			undo : ()=>undo(viewRef.current),

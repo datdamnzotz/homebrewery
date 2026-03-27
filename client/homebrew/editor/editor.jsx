@@ -75,9 +75,6 @@ const Editor = createReactClass({
 		document.getElementById('BrewRenderer').addEventListener('keydown', this.handleControlKeys);
 		document.addEventListener('keydown', this.handleControlKeys);
 
-		this.codeEditor.current.codeMirror?.on('cursorActivity', (cm)=>{this.updateCurrentCursorPage(cm.getCursor());});
-		this.codeEditor.current.codeMirror?.on('scroll', _.throttle(()=>{this.updateCurrentViewPage(this.codeEditor.current.getTopVisibleLine());}, 200));
-
 		const editorTheme = window.localStorage.getItem(EDITOR_THEME_KEY);
 		if(editorTheme) {
 			this.setState({
@@ -130,15 +127,15 @@ const Editor = createReactClass({
 		}
 	},
 
-	updateCurrentCursorPage : function(cursor) {
-		const lines = this.props.brew.text.split('\n').slice(1, cursor.line + 1);
+	updateCurrentCursorPage : function(lineNumber) {
+		const lines = this.props.brew.text.split('\n').slice(0, lineNumber);
 		const pageRegex = this.props.brew.renderer == 'V3' ? PAGEBREAK_REGEX_V3 : /\\page/;
 		const currentPage = lines.reduce((count, line)=>count + (pageRegex.test(line) ? 1 : 0), 1);
 		this.props.onCursorPageChange(currentPage);
 	},
 
-	updateCurrentViewPage : function(topScrollLine) {
-		const lines = this.props.brew.text.split('\n').slice(1, topScrollLine + 1);
+	updateCurrentViewPage : function(topLine) {
+		const lines = this.props.brew.text.split('\n').slice(0, topLine);
 		const pageRegex = this.props.brew.renderer == 'V3' ? PAGEBREAK_REGEX_V3 : /\\page/;
 		const currentPage = lines.reduce((count, line)=>count + (pageRegex.test(line) ? 1 : 0), 1);
 		this.props.onViewPageChange(currentPage);
@@ -205,51 +202,41 @@ const Editor = createReactClass({
 
 		const textSplit  = this.props.renderer == 'V3' ? PAGEBREAK_REGEX_V3 : /\\page/;
 		const textString = this.props.brew.text.split(textSplit).slice(0, targetPage-1).join(textSplit);
-		const targetLine = textString.match('\n') ? textString.split('\n').length - 1 : -1;
+		const targetLine = textString.match('\n') ? textString.split('\n').length : 1;
 
-		let currentY = this.codeEditor.current.codeMirror?.getScrollInfo().top;
-		let targetY  = this.codeEditor.current.codeMirror?.heightAtLine(targetLine, 'local', true);
+		const editor = this.codeEditor.current;
+
+		let currentY = editor.getScrollTop();
+		const targetY  = editor.getLineTop(targetLine);
 
 		let scrollingTimeout;
 		const checkIfScrollComplete = ()=>{ // Prevent interrupting a scroll in progress if user clicks multiple times
 			clearTimeout(scrollingTimeout); // Reset the timer every time a scroll event occurs
 			scrollingTimeout = setTimeout(()=>{
 				isJumping = false;
-				this.codeEditor.current.codeMirror?.off('scroll', checkIfScrollComplete);
 			}, 150); // If 150 ms pass without a scroll event, assume scrolling is done
 		};
 
 		isJumping = true;
 		checkIfScrollComplete();
-		if(this.codeEditor.current?.codeMirror) {
-			this.codeEditor.current.codeMirror?.on('scroll', checkIfScrollComplete);
-		}
 
 		if(smooth) {
 			//Scroll 1/10 of the way every 10ms until 1px off.
 			const incrementalScroll = setInterval(()=>{
 				currentY += (targetY - currentY) / 10;
-				this.codeEditor.current.codeMirror?.scrollTo(null, currentY);
+				editor.scrollToY(currentY);
 
-				// Update target: target height is not accurate until within +-10 lines of the visible window
-				if(Math.abs(targetY - currentY > 100))
-					targetY = this.codeEditor.current.codeMirror?.heightAtLine(targetLine, 'local', true);
-
-				// End when close enough
 				if(Math.abs(targetY - currentY) < 1) {
-					this.codeEditor.current.codeMirror?.scrollTo(null, targetY);  // Scroll any remaining difference
-					this.codeEditor.current.setCursorPosition({ line: targetLine + 1, ch: 0 });
-					this.codeEditor.current.codeMirror?.addLineClass(targetLine + 1, 'wrap', 'sourceMoveFlash');
+					editor.scrollToY(targetY);
+					editor.setCursorToLine(targetLine);
 					clearInterval(incrementalScroll);
 				}
 			}, 10);
 		} else {
-			this.codeEditor.current.codeMirror?.scrollTo(null, targetY);  // Scroll any remaining difference
-			this.codeEditor.current.setCursorPosition({ line: targetLine + 1, ch: 0 });
-			this.codeEditor.current.codeMirror?.addLineClass(targetLine + 1, 'wrap', 'sourceMoveFlash');
+			editor.scrollToY(targetY);
+			editor.setCursorToLine(targetLine);
 		}
 	},
-
 	//Called when there are changes to the editor's dimensions
 	update : function(){},
 
@@ -275,6 +262,8 @@ const Editor = createReactClass({
 					view={this.state.view}
 					value={this.props.brew.text}
 					onChange={this.props.onBrewChange('text')}
+					onCursorChange={(line)=>this.updateCurrentCursorPage(line)}
+					onViewChange={(line)=>this.updateCurrentViewPage(line)}
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
 					rerenderParent={this.rerenderParent}
