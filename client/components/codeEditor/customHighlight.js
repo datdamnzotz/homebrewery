@@ -22,6 +22,7 @@ export function tokenizeCustomMarkdown(text) {
 	const tokens = [];
 	const lines = text.split('\n');
 
+	console.log(tags);
 	lines.forEach((lineText, lineNumber)=>{
 		// --- Page / snippet lines ---
 		if(/^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m.test(lineText)) tokens.push({ line: lineNumber, type: customTags.pageLine });
@@ -230,10 +231,22 @@ export function tokenizeCustomMarkdown(text) {
 export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.heading,  class: 'cm-header' },
 	{ tag: tags.heading1,  class: 'cm-header cm-header-1' },
-	{ tag: tags.keyword, color: '#07a' }, // example for your markdown headings
+	{ tag: tags.heading2,  class: 'cm-header cm-header-2' },
+	{ tag: tags.heading3,  class: 'cm-header cm-header-3' },
+	{ tag: tags.heading4,  class: 'cm-header cm-header-4' },
+	{ tag: tags.heading5,  class: 'cm-header cm-header-5' },
+	{ tag: tags.heading6,  class: 'cm-header cm-header-6' },
+	{ tag: tags.link,  class: 'cm-link' },
+	{ tag: tags.string,  class: 'cm-string' },
+	{ tag: tags.url,  class: 'cm-string cm-url' },
+	{ tag: tags.list,  class: 'cm-list' },
+	{ tag: tags.strong,  class: 'cm-strong' },
+	{ tag: tags.emphasis,  class: 'cm-em' },
+	
+
 	{ tag: customTags.pageLine, color: '#f0a' },
 	{ tag: customTags.snippetLine, class: 'cm-snippetLine', color: '#0af' },
-	{ tag: customTags.inlineBlock, class: 'cm-inline-block', backgroundColor: '#fffae6' },
+	{ tag: customTags.inlineBlock, class: 'cm-inline-block' },
 	{ tag: customTags.emoji, class: 'cm-emoji', color: '#fa0' },
 	{ tag: customTags.superscript, class: 'cm-superscript', verticalAlign: 'super', fontSize: '0.8em' },
 	{ tag: customTags.subscript, class: 'cm-subscript', verticalAlign: 'sub', fontSize: '0.8em' },
