@@ -228,7 +228,8 @@ export function tokenizeCustomMarkdown(text) {
 }
 
 export const customHighlightStyle = HighlightStyle.define([
-	{ tag: tags.heading1, color: '#000', fontWeight: '700' },
+	{ tag: tags.heading,  class: 'cm-header' },
+	{ tag: tags.heading1,  class: 'cm-header cm-header-1' },
 	{ tag: tags.keyword, color: '#07a' }, // example for your markdown headings
 	{ tag: customTags.pageLine, color: '#f0a' },
 	{ tag: customTags.snippetLine, class: 'cm-snippetLine', color: '#0af' },

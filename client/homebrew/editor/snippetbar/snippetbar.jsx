@@ -24,7 +24,10 @@ const ThemeSnippets = {
 };
 
 //import EditorThemes from '../../../../build/homebrew/codeMirror/editorThemes.json';
-import * as themes from '@uiw/codemirror-themes-all';
+import * as themesImport from '@uiw/codemirror-themes-all';
+import { defaultCM5Theme } from '@themes/codeMirror/customThemes/default.js';
+
+const themes = { default: defaultCM5Theme, ...themesImport };
 
 const EditorThemes = Object.entries(themes)
   .filter(([name, value]) =>

@@ -24,6 +24,20 @@
 		font-size: 16px;
 	}
 
+	.cm-gutterElement span {
+		font-family : inherit;
+		font-weight : 600;
+		color       : grey;
+		text-shadow : none;
+	}
+
+	.cm-foldGutter {
+		cursor      : pointer;
+		border-left : 1px solid #EEEEEE;
+		transition  : background 0.1s;
+		&:hover { background : #DDDDDD; }
+	}
+
 	/* Flash animation for source moves */
 	.sourceMoveFlash .cm-line {
 		animation-name: sourceMoveAnimation;

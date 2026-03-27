@@ -22,7 +22,10 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
 
-import * as themes from '@uiw/codemirror-themes-all';
+import * as themesImport from '@uiw/codemirror-themes-all';
+import { defaultCM5Theme } from '@themes/codeMirror/customThemes/default.js';
+
+const themes = { default: defaultCM5Theme, ...themesImport };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
 
@@ -170,11 +173,11 @@ const CodeEditor = forwardRef(
 					openText   : '▾',
 					closedText : '▸'
 				}),
-				themeCompartment.of(themeExtension),
 
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
 				highlightCompartment.of(combinedHighlight),
+				themeCompartment.of(themeExtension),
 				autocompleteEmoji,
 				search(),
 			];
