@@ -61,12 +61,6 @@ export function generateAssetsPlugin(isDev = false) {
 			await fs.copy('./themes/fonts', `${buildDir}/fonts`);
 			await fs.copy('./themes/assets', `${buildDir}/assets`);
 			await fs.copy('./client/icons', `${buildDir}/icons`);
-
-			// Compile CodeMirror editor themes
-			await fs.outputFile(
-				`${buildDir}/homebrew/codeMirror/editorThemes.json`,
-				JSON.stringify(['light', 'dark'], null, 2)
-			);
 		},
 	};
 }
