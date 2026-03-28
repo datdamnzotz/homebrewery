@@ -22,6 +22,11 @@ import { css, cssLanguage } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
+import {closeBrackets} from "@codemirror/autocomplete"
+
+const customClose = closeBrackets({
+  brackets: ["()", "[]", "{{}}"]
+})
 
 import * as themesImport from '@uiw/codemirror-themes-all';
 import defaultCM5Theme from '@themes/codeMirror/default.js';
@@ -182,6 +187,7 @@ const CodeEditor = forwardRef(
 				customKeymap,
 				drawSelection(),
 				EditorState.allowMultipleSelections.of(true),
+				customClose,
 			];
 		};
 

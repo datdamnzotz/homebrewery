@@ -209,8 +209,8 @@ const newPage = (view)=>{
 
 export default keymap.of([
 	{ key: 'Tab', run: insertTabAtCursor },
-	{ key: 'Shift-Tab', run: indentMore },
-	{ key: 'Mod-Shift-Tab', run: indentLess },
+	//{ key: 'Shift-Tab', run: indentMore },
+	{ key: 'Shift-Tab', run: indentLess },
 	{ key: 'Mod-b', run: makeBold },
 	{ key: 'Mod-i', run: makeItalic },
 	{ key: 'Mod-u', run: makeUnderline },
