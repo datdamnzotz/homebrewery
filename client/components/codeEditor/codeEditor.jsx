@@ -16,7 +16,7 @@ import {
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
-import { defaultKeymap, history, historyField, undo, redo } from '@codemirror/commands';
+import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
 import { css, cssLanguage } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -37,6 +37,10 @@ import { customHighlightStyle, tokenizeCustomMarkdown, tokenizeCustomCSS } from 
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js';
 
 const createHighlightPlugin = (renderer, tab)=>{
+	//this function takes the custom tokens created in the tokenize function in customhighlight files
+	//takes the tokens defined by that function and assigns classes to them
+	//it also creates page number and snippet number widgets
+
 	let tokenize;
 
 	if(tab === 'brewStyles') {
@@ -74,19 +78,14 @@ const createHighlightPlugin = (renderer, tab)=>{
 			buildDecorations(view) {
 				const decos = [];
 				const tokens = tokenize(view.state.doc.toString());
-
 				let pageCount = 1;
 				let snippetCount = 0;
+
 				tokens.forEach((tok)=>{
 					const line = view.state.doc.line(tok.line + 1);
 
 					if(tok.from != null && tok.to != null && tok.from < tok.to) {
-
-						decos.push(
-							Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to)
-
-						);
-
+						decos.push(Decoration.mark({ class: `cm-${tok.type}` }).range(line.from + tok.from, line.from + tok.to));
 					} else {
 						decos.push(Decoration.line({ class: `cm-${tok.type}` }).range(line.from));
 						if(tok.type === 'pageLine'  && tab === 'brewText') {
@@ -324,15 +323,15 @@ const CodeEditor = forwardRef(
 			undo : ()=>undo(viewRef.current),
 			redo : ()=>redo(viewRef.current),
 
-			historySize : ()=>{
-				const view = viewRef.current;
-				if(!view) return { done: 0, undone: 0 };
+			historySize : () => {
+  const view = viewRef.current;
+  if (!view) return { done: 0, undone: 0 };
 
-				const h = view.state.field(historyField, false);
-				if(!h) return { done: 0, undone: 0 };
-
-				return { done: h.done.length, undone: h.undone.length };
-			},
+  return {
+    done: undoDepth(view.state),
+    undone: redoDepth(view.state),
+  };
+},
 
 			focus : ()=>viewRef.current.focus(),
 		}));
