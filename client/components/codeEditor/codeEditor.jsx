@@ -174,7 +174,7 @@ const CodeEditor = forwardRef(
 
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
-				highlightCompartment.of([customHighlightPlugin,highlightExtension]),
+				highlightCompartment.of([customHighlightPlugin, highlightExtension]),
 				themeCompartment.of(themeExtension),
 				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
 				search(),
@@ -323,15 +323,15 @@ const CodeEditor = forwardRef(
 			undo : ()=>undo(viewRef.current),
 			redo : ()=>redo(viewRef.current),
 
-			historySize : () => {
-  const view = viewRef.current;
-  if (!view) return { done: 0, undone: 0 };
+			historySize : ()=>{
+				const view = viewRef.current;
+				if(!view) return { done: 0, undone: 0 };
 
-  return {
-    done: undoDepth(view.state),
-    undone: redoDepth(view.state),
-  };
-},
+				return {
+					done   : undoDepth(view.state),
+					undone : redoDepth(view.state),
+				};
+			},
 
 			focus : ()=>viewRef.current.focus(),
 		}));

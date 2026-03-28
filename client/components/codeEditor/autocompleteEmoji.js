@@ -43,7 +43,7 @@ const emojiCompletionList = (context)=>{
     		return div;
     	}
     }));
-	//Label is the text in the list, comes with an icon that just 
+	//Label is the text in the list, comes with an icon that just
 		//renders example text "abc", hid that with css because i didn't see other choice
 	//Apply is the text that is set when the choice is selected
 	//Info is the tooltip

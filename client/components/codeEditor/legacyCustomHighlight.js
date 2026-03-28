@@ -34,7 +34,7 @@ export const legacyCustomHighlightStyle = HighlightStyle.define([
 	{ tag: tags.strong,  class: 'cm-strong' },
 	{ tag: tags.emphasis,  class: 'cm-em' },
 	{ tag: tags.quote,  class: 'cm-quote' },
-	
+
 	//css tags
 
 	{ tag: tags.tagName,  class: 'cm-tag' },
