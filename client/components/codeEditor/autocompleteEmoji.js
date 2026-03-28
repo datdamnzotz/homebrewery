@@ -43,6 +43,10 @@ const emojiCompletionList = (context)=>{
     		return div;
     	}
     }));
+	//Label is the text in the list, comes with an icon that just 
+		//renders example text "abc", hid that with css because i didn't see other choice
+	//Apply is the text that is set when the choice is selected
+	//Info is the tooltip
 
 	return {
 		from : word.from + 1,
@@ -61,7 +65,6 @@ export const autocompleteEmoji = autocompletion({
 				const icon = document.createElement('i');
 				icon.className = `emojiPreview ${emojis[e]}`;
 
-				// append directly to a DocumentFragment to return a single node
 				const fragment = document.createDocumentFragment();
 				fragment.appendChild(icon);
 

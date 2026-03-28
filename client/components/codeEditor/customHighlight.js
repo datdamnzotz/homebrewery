@@ -253,7 +253,7 @@ export function tokenizeCustomCSS(text) {
 
 	return tokens;
 }
-
+//assign classes to tags provided by lezer, not unlike the function above
 export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.heading,  class: 'cm-header' },
 	{ tag: tags.heading1,  class: 'cm-header cm-header-1' },
@@ -285,17 +285,6 @@ export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.variableName,  class: 'cm-variable' },
 	{ tag: tags.invalid,  class: 'cm-error' },
 	{ tag: tags.comment,  class: 'cm-comment' },
-
-	//custom tags
-
-	{ tag: customTags.pageLine, color: '#f0a' },
-	{ tag: customTags.snippetLine, class: 'cm-snippetLine', color: '#0af' },
-	{ tag: customTags.inlineBlock, class: 'cm-inline-block' },
-	{ tag: customTags.emoji, class: 'cm-emoji', color: '#fa0' },
-	{ tag: customTags.superscript, class: 'cm-superscript', verticalAlign: 'super', fontSize: '0.8em' },
-	{ tag: customTags.subscript, class: 'cm-subscript', verticalAlign: 'sub', fontSize: '0.8em' },
-	{ tag: customTags.definitionTerm, class: 'cm-dt', fontWeight: 'bold', color: '#0a0' },
-	{ tag: customTags.definitionDesc, class: 'cm-dd', color: '#070' },
 ]);
 
 

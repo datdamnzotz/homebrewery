@@ -50,10 +50,5 @@ export const legacyCustomHighlightStyle = HighlightStyle.define([
 	{ tag: tags.variableName,  class: 'cm-variable' },
 	{ tag: tags.invalid,  class: 'cm-error' },
 	{ tag: tags.comment,  class: 'cm-comment' },
-
-	//custom tags
-
-	{ tag: customTags.pageLine, color: '#f0a' },
-	{ tag: customTags.snippetLine, class: 'cm-snippetLine', color: '#0af' },
 ]);
 
