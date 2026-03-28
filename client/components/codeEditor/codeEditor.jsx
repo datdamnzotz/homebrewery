@@ -20,13 +20,12 @@ import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codem
 import { languages } from '@codemirror/language-data';
 import { css, cssLanguage } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import {html} from "@codemirror/lang-html"
 import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
 import {closeBrackets} from "@codemirror/autocomplete"
 
-const customClose = closeBrackets({
-  brackets: ["()", "[]", "{{}}"]
-})
+const customClose = closeBrackets({ brackets: ["()", "[]", "{{}}"] });
 
 import * as themesImport from '@uiw/codemirror-themes-all';
 import defaultCM5Theme from '@themes/codeMirror/default.js';
@@ -160,7 +159,7 @@ const CodeEditor = forwardRef(
 
 			const customHighlightPlugin = createHighlightPlugin(renderer, tab);
 
-			const languageExtension = language === 'css' ? [css(), cssLanguage] : markdown({ base: markdownLanguage, codeLanguages: languages });
+			const languageExtension = language === 'css' ? css() : [markdown({ base: markdownLanguage, codeLanguages: languages }), html({ autoCloseTags: true })];
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
 
 			return [
