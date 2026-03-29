@@ -85,7 +85,7 @@ export function tokenizeCustomMarkdown(text) {
 				return; //if line only has colons, stops
 			}
 
-			const singleLineRegex = /^([^:\n]*\S)(::)([^\n]*)$/dmy;
+			const singleLineRegex = /^([^:\n]*\S)\s*(::)([^\n]*)$/dmy;
 
 			const match = singleLineRegex.exec(lineText);
 
@@ -253,6 +253,8 @@ export function tokenizeCustomCSS(text) {
 
 	return tokens;
 }
+
+console.log(tags);
 //assign classes to tags provided by lezer, not unlike the function above
 export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.heading,  class: 'cm-header' },
@@ -269,6 +271,8 @@ export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.strong,  class: 'cm-strong' },
 	{ tag: tags.emphasis,  class: 'cm-em' },
 	{ tag: tags.quote,  class: 'cm-quote' },
+	{ tag: tags.comment,  class: 'cm-comment' },
+	{ tag: tags.monospace,  class: 'cm-comment' },
 
 	//css tags
 
@@ -284,7 +288,7 @@ export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.paren,  class: 'cm-paren' },
 	{ tag: tags.variableName,  class: 'cm-variable' },
 	{ tag: tags.invalid,  class: 'cm-error' },
-	{ tag: tags.comment,  class: 'cm-comment' },
+
 ]);
 
 
