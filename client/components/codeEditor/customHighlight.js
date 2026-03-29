@@ -79,53 +79,52 @@ export function tokenizeCustomMarkdown(text) {
 			}
 		}
 
-		// --- inline definition lists ---
-		if(/::/.test(lineText)) {
-			if(/^:*$/.test(lineText) == true) {
-				return; //if line only has colons, stops
+		const singleLineRegex = /^([^:\n]*\S)(\s*)(::)([^\n]*)$/dmy;
+
+		const match = singleLineRegex.exec(lineText);
+
+		if(match) {
+			const [full, term, spaces, colons, desc] = match;
+
+			let offset = 0;
+
+			tokens.push({
+				line : lineNumber,
+				type : customTags.definitionList,
+			});
+
+			// Term
+			tokens.push({
+				line : lineNumber,
+				type : customTags.definitionTerm,
+				from : offset,
+				to   : offset + term.length,
+			});
+			offset += term.length;
+
+			// Spaces before ::
+			if(spaces) {
+				offset += spaces.length;
 			}
 
-			const singleLineRegex = /^([^:\n]*\S)\s*(::)([^\n]*)$/dmy;
+			// :: colons
+			tokens.push({
+				line : lineNumber,
+				type : customTags.definitionColon,
+				from : offset,
+				to   : offset + colons.length,
+			});
+			offset += colons.length;
 
-			const match = singleLineRegex.exec(lineText);
+			// Definition
+			tokens.push({
+				line : lineNumber,
+				type : customTags.definitionDesc,
+				from : offset,
+				to   : offset + desc.length,
+			});
 
-			if(match) {
-				const [full, term, colons, desc] = match;
-				let offset = 0;
-				// Entire line as definitionList
-				tokens.push({
-					line : lineNumber,
-					type : customTags.definitionList,
-				});
-
-				// Term
-				tokens.push({
-					line : lineNumber,
-					type : customTags.definitionTerm,
-					from : offset,
-					to   : offset + term.length,
-				});
-				offset += term.length;
-
-				// ::
-				tokens.push({
-					line : lineNumber,
-					type : customTags.definitionColon,
-					from : offset,
-					to   : offset + colons.length,
-				});
-				offset += colons.length;
-
-				// Definition
-				tokens.push({
-					line : lineNumber,
-					type : customTags.definitionDesc,
-					from : offset,
-					to   : offset + desc.length,
-				});
-
-				return;
-			}
+			return;
 		}
 
 		// multiline def list
@@ -254,7 +253,6 @@ export function tokenizeCustomCSS(text) {
 	return tokens;
 }
 
-console.log(tags);
 //assign classes to tags provided by lezer, not unlike the function above
 export const customHighlightStyle = HighlightStyle.define([
 	{ tag: tags.heading,  class: 'cm-header' },
