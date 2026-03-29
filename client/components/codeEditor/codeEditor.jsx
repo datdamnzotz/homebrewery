@@ -13,6 +13,7 @@ import {
 	ViewPlugin,
 	WidgetType,
 	drawSelection,
+	dropCursor,
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
 import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
@@ -187,6 +188,7 @@ const CodeEditor = forwardRef(
 				drawSelection(),
 				EditorState.allowMultipleSelections.of(true),
 				customClose,
+				dropCursor(),
 			];
 		};
 
