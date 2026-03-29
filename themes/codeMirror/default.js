@@ -37,7 +37,10 @@ export default EditorView.theme({
 		caretColor      : 'transparent',
 	},
 	'.cm-activeLine' : {
-		backgroundColor : '#e8f2ff',
+		backgroundColor : '#becee374',
+	},
+	'.cm-gutterElement.cm-activeLineGutter' : {
+		backgroundColor : '#becee374',
 	},
 	'.cm-selected' : {
 		backgroundColor : '#d7d4f0',
