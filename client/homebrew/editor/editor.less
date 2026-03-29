@@ -45,8 +45,9 @@
 				}
 			}
 		
-			.cm-count {
-				float : right;
+			.cm-pageLine[data-page-number]::after {
+				content:attr(data-page-number);
+				float:right;
 				color : grey;
 			}
 			.cm-columnSplit {

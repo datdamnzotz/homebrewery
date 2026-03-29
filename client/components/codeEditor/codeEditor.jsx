@@ -53,22 +53,6 @@ const createHighlightPlugin = (renderer, tab)=>{
 	} else {
 		tokenize = renderer === 'V3' ? tokenizeCustomMarkdown : legacyTokenizeCustomMarkdown;
 	}
-	/* eslint-disable no-restricted-syntax */
-	class countWidget extends WidgetType {
-		constructor(count) {
-			super();
-			this.count = count;
-		}
-		toDOM() {
-			const span = document.createElement('span');
-			span.className = 'cm-count';
-			span.textContent = this.count;
-			span.style.color = '#989898';
-			return span;
-		}
-		ignoreEvent() { return true; }
-	}
-	/* eslint-enable no-restricted-syntax */
 
 	return ViewPlugin.fromClass(
 		class {
@@ -96,11 +80,11 @@ const createHighlightPlugin = (renderer, tab)=>{
 						if(tok.type === 'pageLine'  && tab === 'brewText') {
 							pageCount++;
 							line.from === 0 && pageCount--;
-							decos.push(Decoration.widget({ widget: new countWidget(pageCount), side: 2 }).range(line.to));
+							decos.push( Decoration.line({ attributes: { "data-page-number": pageCount }}).range(line.from));
 						}
 						if(tok.type === 'snippetLine' && tab === 'brewSnippets') {
 							snippetCount++;
-							decos.push(Decoration.widget({ widget: new countWidget(snippetCount), side: 2 }).range(line.to));
+							decos.push(Decoration.line({ attributes: { "data-page-number": pageCount }}).range(line.from));
 						}
 					}
 				});
