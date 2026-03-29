@@ -8,7 +8,7 @@ const pageFoldExtension = [
 		const startLine = doc.lineAt(lineStart);
 		const prevLineText = startLine.number > 1 ? doc.line(startLine.number - 1).text : '';
 
-		if(startLine.number > 1 && !matcher.test(prevLineText)) return null;
+		if(!matcher.test(prevLineText)) return null;
 
 		let endLine = startLine.number;
 		while (endLine < doc.lines && !matcher.test(doc.line(endLine + 1).text)) {

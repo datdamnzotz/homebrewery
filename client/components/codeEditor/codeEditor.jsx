@@ -16,17 +16,17 @@ import {
 	dropCursor,
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
-import { foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
+import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
 import { css, cssLanguage } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import {html} from "@codemirror/lang-html"
+import { html } from '@codemirror/lang-html';
 import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
-import {closeBrackets} from "@codemirror/autocomplete"
+import { closeBrackets } from '@codemirror/autocomplete';
 
-const customClose = closeBrackets({ brackets: ["()", "[]", "{{}}"] });
+const customClose = closeBrackets({ brackets: ['()', '[]', '{{}}'] });
 
 import * as themesImport from '@uiw/codemirror-themes-all';
 import defaultCM5Theme from '@themes/codeMirror/default.js';
@@ -80,11 +80,11 @@ const createHighlightPlugin = (renderer, tab)=>{
 						if(tok.type === 'pageLine'  && tab === 'brewText') {
 							pageCount++;
 							line.from === 0 && pageCount--;
-							decos.push( Decoration.line({ attributes: { "data-page-number": pageCount }}).range(line.from));
+							decos.push(Decoration.line({ attributes: { 'data-page-number': pageCount } }).range(line.from));
 						}
 						if(tok.type === 'snippetLine' && tab === 'brewSnippets') {
 							snippetCount++;
-							decos.push(Decoration.line({ attributes: { "data-page-number": pageCount }}).range(line.from));
+							decos.push(Decoration.line({ attributes: { 'data-page-number': pageCount } }).range(line.from));
 						}
 					}
 				});
@@ -322,6 +322,17 @@ const CodeEditor = forwardRef(
 					done   : undoDepth(view.state),
 					undone : redoDepth(view.state),
 				};
+			},
+
+			foldAll : ()=>{
+				const view = viewRef.current;
+				if(!view) return;
+				view.dispatch(foldAllCmd(view));
+			},
+			unfoldAll : ()=>{
+				const view = viewRef.current;
+				if(!view) return;
+				view.dispatch(unfoldAllCmd(view));
 			},
 
 			focus : ()=>viewRef.current.focus(),

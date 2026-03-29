@@ -330,14 +330,13 @@ const Editor = createReactClass({
 		return this.codeEditor.current?.undo();
 	},
 
-	foldCode : function(){
-		return this.codeEditor.current?.foldAllCode();
-	},
+foldCode: function() {
+    return this.codeEditor.current?.foldAll();
+},
 
-	unfoldCode : function(){
-		return this.codeEditor.current?.unfoldAllCode();
-	},
-
+unfoldCode: function() {
+    return this.codeEditor.current?.unfoldAll();
+},
 	render : function(){
 		return (
 			<div className='editor' ref={this.editor}>
