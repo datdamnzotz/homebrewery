@@ -253,7 +253,7 @@ const CodeEditor = forwardRef(
 			view.dispatch({
 				effects : highlightCompartment.reconfigure([customHighlightPlugin, highlightExtension]),
 			});
-		}, [renderer]);
+		}, [renderer, tab]);
 
 		useImperativeHandle(ref, ()=>({
 			getValue : ()=>viewRef.current.state.doc.toString(),
