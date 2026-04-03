@@ -145,7 +145,7 @@ const CodeEditor = forwardRef(
 			const customHighlightPlugin = createHighlightPlugin(renderer, tab);
 
 			const languageExtension = language === 'css' ? css() : [markdown({ base: markdownLanguage, codeLanguages: languages }), html({ autoCloseTags: true })];
-			const themeExtension = themes[editorTheme] ?? themes['default'];
+			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : themes[editorTheme] || themes['default'];
 
 			return [
 				history(), //allows for undo and redo
@@ -234,7 +234,7 @@ const CodeEditor = forwardRef(
 			const view = viewRef.current;
 			if(!view) return;
 
-			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : [];
+			const themeExtension = Array.isArray(themes[editorTheme])? themes[editorTheme]: themes[editorTheme] || themes['default'];
 
 			view.dispatch({
 				effects : themeCompartment.reconfigure(themeExtension),
