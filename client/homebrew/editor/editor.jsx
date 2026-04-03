@@ -11,6 +11,21 @@ import MetadataEditor from './metadataEditor/metadataEditor.jsx';
 
 const EDITOR_THEME_KEY = 'HB_editor_theme';
 
+import * as themesImport from '@uiw/codemirror-themes-all';
+import defaultCM5Theme from '@themes/codeMirror/default.js';
+import darkbrewery from '@themes/codeMirror/darkbrewery.js';
+
+const themes = { default: defaultCM5Theme, darkbrewery, ...themesImport };
+
+const EditorThemes = Object.entries(themes)
+  .filter(([name, value]) =>
+	Array.isArray(value) &&
+	!name.endsWith('Init') &&
+	!name.endsWith('Style')
+  )
+  .map(([name]) => name);
+
+
 const PAGEBREAK_REGEX_V3 = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
 //const SNIPPETBREAK_REGEX_V3 = /^\\snippet\ .*$/;
 const DEFAULT_STYLE_TEXT = dedent`
@@ -75,10 +90,10 @@ const Editor = createReactClass({
 		document.addEventListener('keydown', this.handleControlKeys);
 
 		const editorTheme = window.localStorage.getItem(EDITOR_THEME_KEY);
-		if(editorTheme) {
-			this.setState({
-				editorTheme : editorTheme
-			});
+		if (editorTheme && EditorThemes.includes(editorTheme)) {
+  			this.setState({ editorTheme });
+		} else {
+  			this.setState({ editorTheme: 'default' });
 		}
 		const snippetBar = document.querySelector('.editor > .snippetBar');
 		if(!snippetBar) return;
