@@ -26,7 +26,7 @@ import { autocompleteEmoji } from './autocompleteEmoji.js';
 import { searchKeymap, search } from '@codemirror/search';
 import { closeBrackets } from '@codemirror/autocomplete';
 
-const customClose = closeBrackets({ brackets: ['()', '[]', '{{}}'] });
+const autoCloseBrackets = closeBrackets({ brackets: ['()', '[]', '{{}}'] });
 
 import * as themesImport from '@uiw/codemirror-themes-all';
 import defaultCM5Theme from '@themes/codeMirror/default.js';
@@ -37,7 +37,7 @@ const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
 
 import { generalKeymap, markdownKeymap } from './customKeyMaps.js';
-import pageFoldExtension from './customFolding.js';
+import foldOnPages from './customFolding.js';
 import { customHighlightStyle, tokenizeCustomMarkdown, tokenizeCustomCSS } from './customHighlight.js';
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js';
 
@@ -148,31 +148,37 @@ const CodeEditor = forwardRef(
 			const themeExtension = Array.isArray(themes[editorTheme]) ? themes[editorTheme] : themes[editorTheme] || themes['default'];
 
 			return [
-				history(), //allows for undo and redo
-				setEventListeners,
 				EditorView.lineWrapping,
-				scrollPastEnd(),
+				setEventListeners,
 				languageExtension,
+				autoCloseBrackets,
 				lineNumbers(),
-				pageFoldExtension,
+				scrollPastEnd(),
+				search(),
+				history(), //allows for undo and redo
+				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
 
+				//folding
+				foldOnPages,
 				foldGutter({
 					openText   : '▾',
 					closedText : '▸'
 				}),
 
-				highlightActiveLine(),
-				highlightActiveLineGutter(),
+				//highlights
 				highlightCompartment.of([customHighlightPlugin, highlightExtension]),
 				themeCompartment.of(themeExtension),
-				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
-				search(),
+				highlightActiveLine(),
+				highlightActiveLineGutter(),
+				
+				//keyboard shortcut
 				keymap.of([...defaultKeymap, foldKeymap, ...searchKeymap]),
 				generalKeymap,
 				...(tab !== 'brewStyles' ? [markdownKeymap] : []),
+
+				//multiple cursors and selections
 				drawSelection(),
 				EditorState.allowMultipleSelections.of(true),
-				customClose,
 				dropCursor(),
 			];
 		};
@@ -241,7 +247,9 @@ const CodeEditor = forwardRef(
 				effects : themeCompartment.reconfigure(themeExtension),
 			});
 		}, [editorTheme]);
+
 		useEffect(()=>{
+			//rebuild syntax highlight when changing tab or renderer
 			const view = viewRef.current;
 			if(!view) return;
 

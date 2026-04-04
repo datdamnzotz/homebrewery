@@ -26,6 +26,8 @@ export function tokenizeCustomMarkdown(text) {
 	const tokens = [];
 	const lines = text.split('\n');
 
+	//tokens without a `from` or `to` are interpreted by the custom plugin as line tokens
+
 	lines.forEach((lineText, lineNumber)=>{
 		// --- Page / snippet lines ---
 		if(/^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m.test(lineText)) tokens.push({ line: lineNumber, type: customTags.pageLine });
