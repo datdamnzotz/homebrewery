@@ -81,8 +81,8 @@ export function tokenizeCustomMarkdown(text) {
 			}
 		}
 
+		// --- single line def list ---
 		const singleLineRegex = /^([^:\n]*\S)(\s*)(::)([^\n]*)$/dmy;
-
 		const match = singleLineRegex.exec(lineText);
 
 		if(match) {
@@ -129,7 +129,7 @@ export function tokenizeCustomMarkdown(text) {
 			return;
 		}
 
-		// multiline def list
+		//  --- multiline def list --- 
 		if(!/^::/.test(lines[lineNumber]) && lineNumber + 1 < lines.length && /^::/.test(lines[lineNumber + 1])) {
 			const startLine = lineNumber;
 			const defs = [];
@@ -189,8 +189,8 @@ export function tokenizeCustomMarkdown(text) {
 			while ((match = injectionRegex.exec(lineText)) !== null) {
 				tokens.push({
 					line : lineNumber,
-					from : match.index +1,
-					to   : match.index + match[1].length +1,
+					from : match.index,
+					to   : match.index + match[1].length,
 					type : customTags.injection,
 				});
 			}
