@@ -207,8 +207,13 @@ const newPage = (view)=>{
 	return true;
 };
 
-export default keymap.of([
+export const generalKeymap = keymap.of([
 	{ key: 'Tab', run: insertTabAtCursor },
+	{ key: 'Mod-z', run: undo }, //i think it may be unnecessary
+	{ key: 'Mod-Shift-z', run: redo },
+]);
+
+export const markdownKeymap = keymap.of([
 	//{ key: 'Shift-Tab', run: indentMore },
 	{ key: 'Shift-Tab', run: indentLess },
 	{ key: 'Mod-b', run: makeBold },
@@ -233,6 +238,4 @@ export default keymap.of([
 	{ key: 'Shift-Mod-6', run: makeHeader(6) },
 	{ key: 'Shift-Mod-Enter', run: newColumn },
 	{ key: 'Mod-Enter', run: newPage },
-	{ key: 'Mod-z', run: undo }, //i think it may be unnecessary
-	{ key: 'Mod-Shift-z', run: redo },
 ]);

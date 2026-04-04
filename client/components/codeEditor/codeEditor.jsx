@@ -36,7 +36,7 @@ const themes = { default: defaultCM5Theme, darkbrewery, ...themesImport };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
 
-import customKeymap from './customKeyMap.js';
+import { generalKeymap, markdownKeymap } from './customKeyMaps.js';
 import pageFoldExtension from './customFolding.js';
 import { customHighlightStyle, tokenizeCustomMarkdown, tokenizeCustomCSS } from './customHighlight.js';
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js';
@@ -168,7 +168,8 @@ const CodeEditor = forwardRef(
 				...(tab !== 'brewStyles' ? [autocompleteEmoji] : []),
 				search(),
 				keymap.of([...defaultKeymap, foldKeymap, ...searchKeymap]),
-				customKeymap,
+				generalKeymap,
+				...(tab !== 'brewStyles' ? [markdownKeymap] : []),
 				drawSelection(),
 				EditorState.allowMultipleSelections.of(true),
 				customClose,
