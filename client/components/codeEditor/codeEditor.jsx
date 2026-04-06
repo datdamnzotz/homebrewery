@@ -11,7 +11,6 @@ import {
 	scrollPastEnd,
 	Decoration,
 	ViewPlugin,
-	WidgetType,
 	drawSelection,
 	dropCursor,
 } from '@codemirror/view';
