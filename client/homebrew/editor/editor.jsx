@@ -352,9 +352,9 @@ foldCode: function() {
     return this.codeEditor.current?.foldAll();
 },
 
-unfoldCode: function() {
-    return this.codeEditor.current?.unfoldAll();
-},
+	unfoldCode : function() {
+		return this.codeEditor.current?.unfoldAll();
+	},
 	render : function(){
 		return (
 			<div className='editor' ref={this.editor}>
