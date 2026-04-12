@@ -18,12 +18,11 @@ import darkbrewery from '@themes/codeMirror/darkbrewery.js';
 const themes = { default: defaultCM5Theme, darkbrewery, ...themesImport };
 
 const EditorThemes = Object.entries(themes)
-  .filter(([name, value]) =>
-	Array.isArray(value) &&
+  .filter(([name, value])=>Array.isArray(value) &&
 	!name.endsWith('Init') &&
 	!name.endsWith('Style')
   )
-  .map(([name]) => name);
+  .map(([name])=>name);
 
 
 const PAGEBREAK_REGEX_V3 = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
@@ -91,7 +90,7 @@ const Editor = createReactClass({
 		document.addEventListener('keydown', this.handleControlKeys);
 
 		const editorTheme = window.localStorage.getItem(EDITOR_THEME_KEY);
-		if (editorTheme && EditorThemes.includes(editorTheme)) {
+		if(editorTheme && EditorThemes.includes(editorTheme)) {
   			this.setState({ editorTheme });
 		} else {
   			this.setState({ editorTheme: 'default' });
@@ -319,7 +318,7 @@ const Editor = createReactClass({
 		return this.codeEditor.current?.undo();
 	},
 
-	foldCode: function() {
+	foldCode : function() {
     	return this.codeEditor.current?.foldAll();
 	},
 
