@@ -129,12 +129,6 @@ const CodeEditor = forwardRef(
 
 					onCursorChange(line);
 				}
-				if(update.viewportChanged) {
-					const { from } = update.view.viewport;
-					const line = update.state.doc.lineAt(from).number;
-
-					onViewChange(line);
-				}
 			});
 
 			const highlightExtension = renderer === 'V3'
@@ -169,7 +163,7 @@ const CodeEditor = forwardRef(
 				themeCompartment.of(themeExtension),
 				highlightActiveLine(),
 				highlightActiveLineGutter(),
-				
+
 				//keyboard shortcut
 				keymap.of([...defaultKeymap, foldKeymap, ...searchKeymap]),
 				generalKeymap,
@@ -195,9 +189,35 @@ const CodeEditor = forwardRef(
 				parent : editorRef.current,
 			});
 
+			const view = viewRef.current;
+
+			let ticking = false;
+
+			const handleScroll = ()=>{
+				if(ticking) return;
+
+				ticking = true;
+				requestAnimationFrame(()=>{
+					const view = viewRef.current;
+					if(!view?.scrollDOM) return;
+
+					const top = view.scrollDOM.scrollTop;
+					const block = view.lineBlockAtHeight(top);
+					const line = view.state.doc.lineAt(block.from).number;
+
+					onViewChange(line);
+					ticking = false;
+				});
+			};
+
+			view.scrollDOM.addEventListener('scroll', handleScroll);
+
 			docsRef.current[tab] = state;
 
-			return ()=>viewRef.current?.destroy();
+			return ()=>{
+				view.scrollDOM.removeEventListener('scroll', handleScroll);
+				viewRef.current?.destroy();
+			};
 		}, []);
 
 		useEffect(()=>{

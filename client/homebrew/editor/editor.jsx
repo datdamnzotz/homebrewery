@@ -266,29 +266,6 @@ const Editor = createReactClass({
 		this.forceUpdate();
 	},
 
-	//temporary fix until cm6 comes next update
-	attachCodeMirrorListeners : function(cm) {
-		if(!cm) return;
-		// detach previous (important on remount / view switch)
-		if(this._cm) {
-			this._cm.off('cursorActivity', this._onCursor);
-			this._cm.off('scroll', this._onScroll);
-		}
-
-		this._cm = cm;
-
-		this._onCursor = ()=>{
-			this.updateCurrentCursorPage(cm.getCursor());
-		};
-
-		this._onScroll = _.throttle(()=>{
-			const topLine = cm.lineAtHeight(cm.getScrollInfo().top, 'local');
-			this.updateCurrentViewPage(topLine);
-		}, 200);
-
-		cm.on('cursorActivity', this._onCursor);
-		cm.on('scroll', this._onScroll);
-	},
 	renderEditor : function(){
 		if(this.isText()){
 			return <>
