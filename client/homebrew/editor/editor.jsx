@@ -44,6 +44,7 @@ const DEFAULT_SNIPPET_TEXT = dedent`
 				This snippet is accessible in the brew tab, and will be inherited if the brew is used as a theme.
 `;
 let isJumping = false;
+let jumpSource = null;
 
 const Editor = createReactClass({
 	displayName     : 'Editor',
@@ -164,7 +165,7 @@ const Editor = createReactClass({
 	},
 
 	brewJump : function(targetPage=this.props.currentEditorCursorPageNum, smooth=true){
-		if(!window || !this.isText() || isJumping)
+		if(!window || !this.isText() || isJumping || jumpSource === 'source')
 			return;
 
 		// Get current brewRenderer scroll position and calculate target position
@@ -177,11 +178,13 @@ const Editor = createReactClass({
 			clearTimeout(scrollingTimeout);   // Reset the timer every time a scroll event occurs
 			scrollingTimeout = setTimeout(()=>{
 				isJumping = false;
+				jumpSource = null;
 				brewRenderer.removeEventListener('scroll', checkIfScrollComplete);
 			}, 150);	// If 150 ms pass without a brewRenderer scroll event, assume scrolling is done
 		};
 
 		isJumping = true;
+		jumpSource = 'brew';
 		checkIfScrollComplete();
 		brewRenderer.addEventListener('scroll', checkIfScrollComplete);
 
@@ -205,17 +208,20 @@ const Editor = createReactClass({
 	},
 
 	sourceJump : function(targetPage=this.props.currentBrewRendererPageNum, smooth=true){
-		if(!this.isText() || isJumping)
+		if(!this.isText() || isJumping || jumpSource === 'brew')
 			return;
 
 		const editor = this.codeEditor.current;
 		if(!editor) return;
+		jumpSource = 'source';
 
 		editor.scrollToPage(targetPage);
-				const pos = editor.getPagePos(targetPage);
-		editor.setCursorToPos?.(pos);
+		editor.setCursorToPage(targetPage);
+		setTimeout(()=>{
+			jumpSource = null;
+		}, 200);
 	},
-	
+
 	//Called when there are changes to the editor's dimensions
 	update : function(){},
 

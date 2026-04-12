@@ -367,12 +367,13 @@ const CodeEditor = forwardRef(
 				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
 				return pos;
 			},
-			setCursorToLine : (lineNumber)=>{
+			setCursorToPage : (pageNumber)=>{
 				const view = viewRef.current;
-				const line = view.state.doc.line(lineNumber);
+				if(!view) return 0;
 
+				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
 				view.dispatch({
-					selection : { anchor: line.from }
+					selection : { anchor: pos }
 				});
 
 				view.focus();
