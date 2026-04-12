@@ -118,16 +118,45 @@ const CodeEditor = forwardRef(
 		const docsRef = useRef({});
 		const prevTabRef = useRef(tab);
 
+		// page map
+		const pageBreaksRef = useRef([]);
+
+		const recomputePages = (doc)=>{
+			const pages = [0];
+			const text = doc.toString();
+			let offset = 0;
+
+			for (const line of text.split('\n')) {
+				if(/^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m.test(line)) {
+					pages.push(offset);
+				}
+				offset += line.length + 1;
+			}
+
+			pageBreaksRef.current = pages;
+		};
+
+		const findPageFromPos = (pos)=>{
+			const pages = pageBreaksRef.current;
+			let page = 1;
+
+			for (let i = 1; i < pages.length; i++) {
+				if(pos >= pages[i]) page = i + 1;
+			}
+
+			return page;
+		};
+
 		const createExtensions = ({ onChange, language, editorTheme })=>{
 			const setEventListeners = EditorView.updateListener.of((update)=>{
 				if(update.docChanged) {
+					recomputePages(update.state.doc); // CHANGED (added)
 					onChange(update.state.doc.toString());
 				}
 				if(update.selectionSet) {
 					const pos = update.state.selection.main.head;
-					const line = update.state.doc.lineAt(pos).number;
-
-					onCursorChange(line);
+					const page = findPageFromPos(pos);
+					onCursorChange(page);
 				}
 			});
 
@@ -184,6 +213,8 @@ const CodeEditor = forwardRef(
 				extensions : createExtensions({ onChange, language, editorTheme }),
 			});
 
+			recomputePages(state.doc);
+
 			viewRef.current = new EditorView({
 				state,
 				parent : editorRef.current,
@@ -198,14 +229,12 @@ const CodeEditor = forwardRef(
 
 				ticking = true;
 				requestAnimationFrame(()=>{
-					const view = viewRef.current;
-					if(!view?.scrollDOM) return;
-
 					const top = view.scrollDOM.scrollTop;
 					const block = view.lineBlockAtHeight(top);
-					const line = view.state.doc.lineAt(block.from).number;
 
-					onViewChange(line);
+					const page = findPageFromPos(block.from); // CHANGED
+					onViewChange(page);
+
 					ticking = false;
 				});
 			};
@@ -320,14 +349,24 @@ const CodeEditor = forwardRef(
 				viewRef.current.scrollDOM.scrollTo({ top: y });
 			},
 
-			getLineTop : (lineNumber)=>{
+			scrollToPage : (pageNumber, smooth = true)=>{
+				const view = viewRef.current;
+				if(!view) return;
+
+				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
+
+				view.dispatch({
+					effects : EditorView.scrollIntoView(pos, { y: 'start' })
+				});
+
+			},
+			getPagePos : (pageNumber)=>{
 				const view = viewRef.current;
 				if(!view) return 0;
 
-				const line = view.state.doc.line(lineNumber);
-				return view.coordsAtPos(line.from)?.top ?? 0;
+				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
+				return pos;
 			},
-
 			setCursorToLine : (lineNumber)=>{
 				const view = viewRef.current;
 				const line = view.state.doc.line(lineNumber);

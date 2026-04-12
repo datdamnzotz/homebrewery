@@ -141,18 +141,12 @@ const Editor = createReactClass({
 		}
 	},
 
-	updateCurrentCursorPage : function(lineNumber) {
-		const lines = this.props.brew.text.split('\n').slice(0, lineNumber);
-		const pageRegex = this.props.brew.renderer == 'V3' ? PAGEBREAK_REGEX_V3 : /\\page/;
-		const currentPage = lines.reduce((count, line)=>count + (pageRegex.test(line) ? 1 : 0), 1);
-		this.props.onCursorPageChange(currentPage);
+	updateCurrentCursorPage : function(pageNumber) {
+		this.props.onCursorPageChange(pageNumber);
 	},
 
-	updateCurrentViewPage : function(topLine) {
-		const lines = this.props.brew.text.split('\n').slice(0, topLine);
-		const pageRegex = this.props.brew.renderer == 'V3' ? PAGEBREAK_REGEX_V3 : /\\page/;
-		const currentPage = lines.reduce((count, line)=>count + (pageRegex.test(line) ? 1 : 0), 1);
-		this.props.onViewPageChange(currentPage);
+	updateCurrentViewPage : function(pageNumber) {
+		this.props.onViewPageChange(pageNumber);
 	},
 
 	handleInject : function(injectText){
@@ -214,43 +208,14 @@ const Editor = createReactClass({
 		if(!this.isText() || isJumping)
 			return;
 
-		const textSplit  = this.props.renderer == 'V3' ? PAGEBREAK_REGEX_V3 : /\\page/;
-		const textString = this.props.brew.text.split(textSplit).slice(0, targetPage-1).join(textSplit);
-		const targetLine = textString.match('\n') ? textString.split('\n').length : 1;
-
 		const editor = this.codeEditor.current;
+		if(!editor) return;
 
-		let currentY = editor.getScrollTop();
-		const targetY  = editor.getLineTop(targetLine);
-
-		let scrollingTimeout;
-		const checkIfScrollComplete = ()=>{ // Prevent interrupting a scroll in progress if user clicks multiple times
-			clearTimeout(scrollingTimeout); // Reset the timer every time a scroll event occurs
-			scrollingTimeout = setTimeout(()=>{
-				isJumping = false;
-			}, 150); // If 150 ms pass without a scroll event, assume scrolling is done
-		};
-
-		isJumping = true;
-		checkIfScrollComplete();
-
-		if(smooth) {
-			//Scroll 1/10 of the way every 10ms until 1px off.
-			const incrementalScroll = setInterval(()=>{
-				currentY += (targetY - currentY) / 10;
-				editor.scrollToY(currentY);
-
-				if(Math.abs(targetY - currentY) < 1) {
-					editor.scrollToY(targetY);
-					editor.setCursorToLine(targetLine);
-					clearInterval(incrementalScroll);
-				}
-			}, 10);
-		} else {
-			editor.scrollToY(targetY);
-			editor.setCursorToLine(targetLine);
-		}
+		editor.scrollToPage(targetPage);
+				const pos = editor.getPagePos(targetPage);
+		editor.setCursorToPos?.(pos);
 	},
+	
 	//Called when there are changes to the editor's dimensions
 	update : function(){},
 
@@ -276,8 +241,8 @@ const Editor = createReactClass({
 					view={this.state.view}
 					value={this.props.brew.text}
 					onChange={this.props.onBrewChange('text')}
-					onCursorChange={(line)=>this.updateCurrentCursorPage(line)}
-					onViewChange={(line)=>this.updateCurrentViewPage(line)}
+					onCursorChange={(page)=>this.updateCurrentCursorPage(page)}
+					onViewChange={(page)=>this.updateCurrentViewPage(page)}
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
 					rerenderParent={this.rerenderParent}
@@ -348,9 +313,9 @@ const Editor = createReactClass({
 		return this.codeEditor.current?.undo();
 	},
 
-foldCode: function() {
-    return this.codeEditor.current?.foldAll();
-},
+	foldCode: function() {
+    	return this.codeEditor.current?.foldAll();
+	},
 
 	unfoldCode : function() {
 		return this.codeEditor.current?.unfoldAll();
