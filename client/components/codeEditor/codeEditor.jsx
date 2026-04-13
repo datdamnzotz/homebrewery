@@ -15,6 +15,7 @@ import {
 	dropCursor,
 } from '@codemirror/view';
 import { EditorState, Compartment } from '@codemirror/state';
+import { StateEffect, StateField } from '@codemirror/state';
 import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
@@ -95,6 +96,33 @@ const createHighlightPlugin = (renderer, tab)=>{
 		{ decorations: (v)=>v.decorations }
 	);
 };
+const setProgrammaticCursorLine = StateEffect.define();
+
+const programmaticCursorLineField = StateField.define({
+	create() {
+		return Decoration.none;
+	},
+	update(decorations, transitionState) {
+		//deco is the decoratiions object
+		//tr is the transition state object, tr.effects is an array of stateEffects
+		//seems to be the easiest way of setting a class programatically only when called
+		for (const effects of transitionState.effects) {
+			if(effects.is(setProgrammaticCursorLine)) {
+				const pos = effects.value;
+				if (pos == null) return Decoration.none;
+				const line = transitionState.state.doc.lineAt(pos);
+
+				return Decoration.set([
+					Decoration.line({
+						class : 'sourceMoveFlash'
+					}).range(line.from)
+				]);
+			}
+		}
+		return decorations;
+	},
+	provide : (decorationSet)=>EditorView.decorations.from(decorationSet)
+});
 
 const CodeEditor = forwardRef(
 	(
@@ -202,6 +230,7 @@ const CodeEditor = forwardRef(
 				drawSelection(),
 				EditorState.allowMultipleSelections.of(true),
 				dropCursor(),
+				programmaticCursorLineField,
 			];
 		};
 
@@ -369,14 +398,22 @@ const CodeEditor = forwardRef(
 			},
 			setCursorToPage : (pageNumber)=>{
 				const view = viewRef.current;
-				if(!view) return 0;
+				if(!view) return;
 
 				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
+
 				view.dispatch({
-					selection : { anchor: pos }
+					selection : { anchor: pos },
+					effects   : setProgrammaticCursorLine.of(pos)
 				});
 
 				view.focus();
+
+				setTimeout(() => {
+					view.dispatch({
+						effects: setProgrammaticCursorLine.of(null)
+					});
+				}, 400);
 			},
 
 			undo : ()=>undo(viewRef.current),
