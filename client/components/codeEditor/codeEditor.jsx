@@ -110,7 +110,7 @@ const programmaticCursorLineField = StateField.define({
 		for (const effects of transitionState.effects) {
 			if(effects.is(setProgrammaticCursorLine)) {
 				const pos = effects.value;
-				if (pos == null) return Decoration.none;
+				if(pos == null) return Decoration.none;
 				const line = transitionState.state.doc.lineAt(pos);
 
 				return Decoration.set([
@@ -357,9 +357,9 @@ const CodeEditor = forwardRef(
 				const view = viewRef.current;
 
 
-  view.dispatch(
-    view.state.replaceSelection(text)
-  );
+				view.dispatch(
+					view.state.replaceSelection(text)
+				);
 				view.focus();
 			},
 			getCursorPosition : ()=>viewRef.current.state.selection.main.head,
@@ -401,9 +401,9 @@ const CodeEditor = forwardRef(
 
 				view.focus();
 
-				setTimeout(() => {
+				setTimeout(()=>{
 					view.dispatch({
-						effects: setProgrammaticCursorLine.of(null)
+						effects : setProgrammaticCursorLine.of(null)
 					});
 				}, 400);
 			},
