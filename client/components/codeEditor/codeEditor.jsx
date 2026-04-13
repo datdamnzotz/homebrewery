@@ -355,21 +355,11 @@ const CodeEditor = forwardRef(
 
 			injectText : (text)=>{
 				const view = viewRef.current;
-				const changes = view.state.selection.ranges.map((range)=>({
-					from   : range.from,
-					to     : range.to,
-					insert : text
-				}));
 
-				const newRanges = view.state.selection.ranges.map((range)=>({
-					anchor : range.from + text.length
-				}));
 
-				view.dispatch({
-					changes,
-					selection : { ranges: newRanges }
-				});
-
+  view.dispatch(
+    view.state.replaceSelection(text)
+  );
 				view.focus();
 			},
 			getCursorPosition : ()=>viewRef.current.state.selection.main.head,

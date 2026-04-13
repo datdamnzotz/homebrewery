@@ -150,7 +150,7 @@ const Editor = createReactClass({
 	},
 
 	handleInject : function(injectText){
-		this.codeEditor.current?.injectText(injectText, false);
+		this.codeEditor.current?.injectText(injectText);
 	},
 
 	handleViewChange : function(newView){
