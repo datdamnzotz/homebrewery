@@ -51,6 +51,7 @@ const emojiCompletionList = (context)=>{
 	return {
 		from : word.from + 1,
 		options,
+		filter: false,
 	};
 };
 
