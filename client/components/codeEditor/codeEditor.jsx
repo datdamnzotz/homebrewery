@@ -40,6 +40,8 @@ import foldOnPages from './customFolding.js';
 import { customHighlightStyle, tokenizeCustomMarkdown, tokenizeCustomCSS } from './customHighlight.js';
 import { legacyCustomHighlightStyle, legacyTokenizeCustomMarkdown } from './legacyCustomHighlight.js';
 
+const PAGEBREAK_REGEX_V3 = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
+
 const createHighlightPlugin = (renderer, tab)=>{
 	//this function takes the custom tokens created in the tokenize function in customhighlight files
 	//takes the tokens defined by that function and assigns classes to them
@@ -95,7 +97,6 @@ const createHighlightPlugin = (renderer, tab)=>{
 		{ decorations: (v)=>v.decorations }
 	);
 };
-
 
 const setProgrammaticCursorLine = StateEffect.define();
 
@@ -155,7 +156,7 @@ const CodeEditor = forwardRef(
 			let offset = 0;
 
 			for (const line of text.split('\n')) {
-				if(/^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m.test(line)) {
+				if(PAGEBREAK_REGEX_V3.test(line)) {
 					pages.push(offset);
 				}
 				offset += line.length + 1;
@@ -178,7 +179,7 @@ const CodeEditor = forwardRef(
 		const createExtensions = ({ onChange, language, editorTheme })=>{
 			const setEventListeners = EditorView.updateListener.of((update)=>{
 				if(update.docChanged) {
-					recomputePages(update.state.doc); // CHANGED (added)
+					recomputePages(update.state.doc);
 					onChange(update.state.doc.toString());
 				}
 				if(update.selectionSet) {
