@@ -14,8 +14,7 @@ import {
 	drawSelection,
 	dropCursor,
 } from '@codemirror/view';
-import { EditorState, Compartment } from '@codemirror/state';
-import { StateEffect, StateField } from '@codemirror/state';
+import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
 import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
@@ -96,6 +95,8 @@ const createHighlightPlugin = (renderer, tab)=>{
 		{ decorations: (v)=>v.decorations }
 	);
 };
+
+
 const setProgrammaticCursorLine = StateEffect.define();
 
 const programmaticCursorLineField = StateField.define({
