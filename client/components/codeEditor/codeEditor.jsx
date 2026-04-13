@@ -300,6 +300,7 @@ const CodeEditor = forwardRef(
 				view.setState(nextState);
 				prevTabRef.current = tab;
 			}
+			view.focus();
 		}, [tab]);
 
 		useEffect(()=>{
