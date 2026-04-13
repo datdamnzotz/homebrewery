@@ -18,7 +18,7 @@ import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/s
 import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
-import { css, cssLanguage } from '@codemirror/lang-css';
+import { css } from '@codemirror/lang-css';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { html } from '@codemirror/lang-html';
 import { autocompleteEmoji } from './autocompleteEmoji.js';
@@ -83,7 +83,7 @@ const createHighlightPlugin = (renderer, tab)=>{
 						}
 						if(tok.type === 'snippetLine' && tab === 'brewSnippets') {
 							snippetCount++;
-							decos.push(Decoration.line({ attributes: { 'data-page-number': pageCount } }).range(line.from));
+							decos.push(Decoration.line({ attributes: { 'data-page-number': snippetCount } }).range(line.from));
 						}
 					}
 				});
@@ -126,16 +126,16 @@ const programmaticCursorLineField = StateField.define({
 });
 
 const CodeEditor = forwardRef(
-	(
+	(	
 		{
+			language = '',
+			tab = 'brewText',
+			view,
 			value = '',
 			onChange = ()=>{},
 			onCursorChange = ()=>{},
 			onViewChange = ()=>{},
-			language = '',
-			tab = 'brewText',
 			editorTheme = 'default',
-			view,
 			style,
 			renderer,
 			...props
@@ -344,14 +344,6 @@ const CodeEditor = forwardRef(
 		}, [renderer, tab]);
 
 		useImperativeHandle(ref, ()=>({
-			getValue : ()=>viewRef.current.state.doc.toString(),
-
-			setValue : (text)=>{
-				const view = viewRef.current;
-				view.dispatch({
-					changes : { from: 0, to: view.state.doc.length, insert: text },
-				});
-			},
 
 			injectText : (text)=>{
 				const view = viewRef.current;
@@ -364,12 +356,6 @@ const CodeEditor = forwardRef(
 			},
 			getCursorPosition : ()=>viewRef.current.state.selection.main.head,
 
-			getScrollTop : ()=>viewRef.current.scrollDOM.scrollTop,
-
-			scrollToY : (y)=>{
-				viewRef.current.scrollDOM.scrollTo({ top: y });
-			},
-
 			scrollToPage : (pageNumber, smooth = true)=>{
 				const view = viewRef.current;
 				if(!view) return;
@@ -377,26 +363,8 @@ const CodeEditor = forwardRef(
 				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
 
 				view.dispatch({
-					effects : EditorView.scrollIntoView(pos, { y: 'start' })
-				});
-
-			},
-			getPagePos : (pageNumber)=>{
-				const view = viewRef.current;
-				if(!view) return 0;
-
-				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
-				return pos;
-			},
-			setCursorToPage : (pageNumber)=>{
-				const view = viewRef.current;
-				if(!view) return;
-
-				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
-
-				view.dispatch({
 					selection : { anchor: pos },
-					effects   : setProgrammaticCursorLine.of(pos)
+					effects : [setProgrammaticCursorLine.of(pos), EditorView.scrollIntoView(pos, { y: 'start' })],
 				});
 
 				view.focus();

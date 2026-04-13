@@ -25,7 +25,7 @@ const EditorThemes = Object.entries(themes)
   .map(([name])=>name);
 
 
-const PAGEBREAK_REGEX_V3 = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
+//const PAGEBREAK_REGEX_V3 = /^(?=\\page(?:break)?(?: *{[^\n{}]*})?$)/m;
 //const SNIPPETBREAK_REGEX_V3 = /^\\snippet\ .*$/;
 const DEFAULT_STYLE_TEXT = dedent`
 				/*=======---  Example CSS styling  ---=======*/
@@ -215,7 +215,6 @@ const Editor = createReactClass({
 		jumpSource = 'source';
 
 		editor.scrollToPage(targetPage);
-		editor.setCursorToPage(targetPage);
 		setTimeout(()=>{
 			jumpSource = null;
 		}, 200);
@@ -250,7 +249,6 @@ const Editor = createReactClass({
 					onViewChange={(page)=>this.updateCurrentViewPage(page)}
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
-					rerenderParent={this.rerenderParent}
 					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }}
 					onReady={this.attachCodeMirrorListeners}/>
 			</>;
@@ -264,10 +262,8 @@ const Editor = createReactClass({
 					view={this.state.view}
 					value={this.props.brew.style ?? DEFAULT_STYLE_TEXT}
 					onChange={this.props.onBrewChange('style')}
-					enableFolding={true}
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
-					rerenderParent={this.rerenderParent}
 					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }}
 					onReady={this.attachCodeMirrorListeners}/>
 			</>;
@@ -276,8 +272,7 @@ const Editor = createReactClass({
 			return <>
 				<CodeEditor key='codeEditor'
 					view={this.state.view}
-					style={{ display: 'none' }}
-					rerenderParent={this.rerenderParent} />
+					style={{ display: 'none' }}/>
 				<MetadataEditor
 					metadata={this.props.brew}
 					themeBundle={this.props.themeBundle}
