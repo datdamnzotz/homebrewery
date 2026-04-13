@@ -147,8 +147,7 @@ const CodeEditor = forwardRef(
 		const docsRef = useRef({});
 		const prevTabRef = useRef(tab);
 
-		// page map
-		const pageBreaksRef = useRef([]);
+		const pageMap = useRef([]);
 
 		const recomputePages = (doc)=>{
 			const pages = [0];
@@ -162,11 +161,11 @@ const CodeEditor = forwardRef(
 				offset += line.length + 1;
 			}
 
-			pageBreaksRef.current = pages;
+			pageMap.current = pages;
 		};
 
 		const findPageFromPos = (pos)=>{
-			const pages = pageBreaksRef.current;
+			const pages = pageMap.current;
 			let page = 1;
 
 			for (let i = 1; i < pages.length; i++) {
@@ -360,7 +359,7 @@ const CodeEditor = forwardRef(
 				const view = viewRef.current;
 				if(!view) return;
 
-				const pos = pageBreaksRef.current[pageNumber - 1] ?? 0;
+				const pos = pageMap.current[pageNumber - 1] ?? 0;
 
 				view.dispatch({
 					selection : { anchor: pos },
