@@ -273,24 +273,13 @@ const BrewRenderer = (props)=>{
 	const frameDidMount = ()=>{	//This triggers when iFrame finishes internal "componentDidMount"
 		scrollToHash(window.location.hash);
 
-		if(navigation) {
-			navigation.addEventListener('navigate', (e)=>{
-				if(e.hashChange && e.destination.sameDocument){
-					const dest = e.destination.url.slice(e.destination.url.indexOf('#'));
-					scrollToHash(dest);
-				}
-			});
-		} else {
-			urlRef.current = window.location.href;
-			setInterval(()=>{
-				if(window.location.href != urlRef.current){
-					urlRef.current = window.location.href;
-					const tmpURL = new URL(window.location.href);
-					const target = tmpURL.hash;
-					scrollToHash(target);
-				}
-			}, 1000);
-		};
+		window.addEventListener('hashchange', ()=>{
+			scrollToHash(window.location.hash);
+		});
+
+		window.onbeforeunload(()=>{
+			window.removeEventListener('hashchange');
+		});
 
 		setTimeout(()=>{	//We still see a flicker where the style isn't applied yet, so wait 100ms before showing iFrame
 			renderPages(); //Make sure page is renderable before showing
