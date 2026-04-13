@@ -82,7 +82,7 @@ export function tokenizeCustomMarkdown(text) {
 		}
 
 		// --- single line def list ---
-		const singleLineRegex = /^([^:\n]*\S)(\s*)(::)([^\n]*)$/dmy;
+		const singleLineRegex = /^(?=.*[^:])(.+?)(\s*)(::)([^\n]*)$/dmy;
 		const match = singleLineRegex.exec(lineText);
 
 		if(match) {
