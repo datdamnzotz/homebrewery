@@ -86,9 +86,10 @@ const Editor = createReactClass({
 
 	componentDidMount : function() {
 
-		document.getElementById('BrewRenderer').addEventListener('keydown', this.handleControlKeys);
+		const brewRenderer = document.getElementById('BrewRenderer');
+		brewRenderer.onload = () => brewRenderer.contentDocument?.addEventListener('keydown', this.handleControlKeys);
 		document.addEventListener('keydown', this.handleControlKeys);
-
+		
 		const editorTheme = window.localStorage.getItem(EDITOR_THEME_KEY);
 		if(editorTheme && EditorThemes.includes(editorTheme)) {
   			this.setState({ editorTheme });
@@ -159,7 +160,7 @@ const Editor = createReactClass({
 		this.setState({
 			view : newView
 		}, ()=>{
-			this.codeEditor.current?.codeMirror?.focus();
+			this.codeEditor.current?.focus();
 		});
 	},
 
@@ -249,8 +250,7 @@ const Editor = createReactClass({
 					onViewChange={(page)=>this.updateCurrentViewPage(page)}
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
-					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }}
-					onReady={this.attachCodeMirrorListeners}/>
+					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }}/>
 			</>;
 		}
 		if(this.isStyle()){
@@ -264,8 +264,7 @@ const Editor = createReactClass({
 					onChange={this.props.onBrewChange('style')}
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
-					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }}
-					onReady={this.attachCodeMirrorListeners}/>
+					style={{  height: `calc(100% - ${this.state.snippetBarHeight}px)` }}/>
 			</>;
 		}
 		if(this.isMeta()){
@@ -295,8 +294,7 @@ const Editor = createReactClass({
 					editorTheme={this.state.editorTheme}
 					renderer={this.props.brew.renderer}
 					rerenderParent={this.rerenderParent}
-					style={{  height: `calc(100% - 25px)` }}
-					onReady={this.attachCodeMirrorListeners}/>
+					style={{  height: `calc(100% - 25px)` }}/>
 			</>;
 		}
 	},
