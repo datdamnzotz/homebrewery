@@ -49,9 +49,9 @@ const emojiCompletionList = (context)=>{
 	//Info is the tooltip
 
 	return {
-		from : word.from + 1,
+		from   : word.from + 1,
 		options,
-		filter: false,
+		filter : false,
 	};
 };
 

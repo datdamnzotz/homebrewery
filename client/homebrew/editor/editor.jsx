@@ -87,9 +87,9 @@ const Editor = createReactClass({
 	componentDidMount : function() {
 
 		const brewRenderer = document.getElementById('BrewRenderer');
-		brewRenderer.onload = () => brewRenderer.contentDocument?.addEventListener('keydown', this.handleControlKeys);
+		brewRenderer.onload = ()=>brewRenderer.contentDocument?.addEventListener('keydown', this.handleControlKeys);
 		document.addEventListener('keydown', this.handleControlKeys);
-		
+
 		const editorTheme = window.localStorage.getItem(EDITOR_THEME_KEY);
 		if(editorTheme && EditorThemes.includes(editorTheme)) {
   			this.setState({ editorTheme });

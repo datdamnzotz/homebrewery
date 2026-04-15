@@ -127,7 +127,7 @@ const programmaticCursorLineField = StateField.define({
 });
 
 const CodeEditor = forwardRef(
-	(	
+	(
 		{
 			language = '',
 			tab = 'brewText',
@@ -364,7 +364,7 @@ const CodeEditor = forwardRef(
 
 				view.dispatch({
 					selection : { anchor: pos },
-					effects : [setProgrammaticCursorLine.of(pos), EditorView.scrollIntoView(pos, { y: 'start' })],
+					effects   : [setProgrammaticCursorLine.of(pos), EditorView.scrollIntoView(pos, { y: 'start' })],
 				});
 
 				view.focus();

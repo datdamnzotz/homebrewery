@@ -129,7 +129,7 @@ export function tokenizeCustomMarkdown(text) {
 			return;
 		}
 
-		//  --- multiline def list --- 
+		//  --- multiline def list ---
 		if(!/^::/.test(lines[lineNumber]) && lineNumber + 1 < lines.length && /^::/.test(lines[lineNumber + 1])) {
 			const startLine = lineNumber;
 			const defs = [];
