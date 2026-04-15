@@ -110,7 +110,6 @@
     "@vitejs/plugin-react": "^5.1.2",
     "body-parser": "^2.2.0",
     "classnames": "^2.5.1",
-    "cm6-theme-basic-light": "^0.2.0",
     "cookie-parser": "^1.4.7",
     "core-js": "^3.49.0",
     "cors": "^2.8.5",
