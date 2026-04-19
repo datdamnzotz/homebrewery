@@ -273,13 +273,7 @@ const BrewRenderer = (props)=>{
 	const frameDidMount = ()=>{	//This triggers when iFrame finishes internal "componentDidMount"
 		scrollToHash(window.location.hash);
 
-		window.addEventListener('hashchange', ()=>{
-			scrollToHash(window.location.hash);
-		});
-
-		window.onbeforeunload(()=>{
-			window.removeEventListener('hashchange');
-		});
+		window.addEventListener('hashchange', ()=>scrollToHash(window.location.hash));
 
 		setTimeout(()=>{	//We still see a flicker where the style isn't applied yet, so wait 100ms before showing iFrame
 			renderPages(); //Make sure page is renderable before showing
