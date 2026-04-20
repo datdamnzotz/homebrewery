@@ -1,6 +1,7 @@
 /* eslint max-lines: ["error", { "max": 300 }] */
 import { keymap } from '@codemirror/view';
 import { undo, redo, indentMore } from '@codemirror/commands';
+import { Prec } from '@codemirror/state';
 
 const indentLess = (view)=>{
 	const { from, to } = view.state.selection.main;
@@ -193,7 +194,7 @@ export const generalKeymap = keymap.of([
 	{ key: 'Mod-Shift-z', run: redo },
 ]);
 
-export const markdownKeymap = keymap.of([
+export const markdownKeymap = Prec.highest(keymap.of([
 	//{ key: 'Shift-Tab', run: indentMore },
 	{ key: 'Shift-Tab', run: indentLess },
 	{ key: 'Mod-b', run: makeBold },
@@ -219,4 +220,4 @@ export const markdownKeymap = keymap.of([
 	{ key: 'Shift-Mod-Enter', run: newColumn },
 	{ key: 'Mod-Enter', run: newPage },
 
-]);
+]));
