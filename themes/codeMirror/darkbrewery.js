@@ -54,7 +54,7 @@ export default EditorView.theme({
 	'.cm-activeLine' : {
 		backgroundColor : '#868c9323',
 	},
-	'.cm-selected' : {
+	'.cm-selectionBackground ' : {
 		backgroundColor : '#d7d4f0',
 	},
 	'.cm-pageLine' : {
