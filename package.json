@@ -58,7 +58,7 @@
       "server"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(nanoid|@exodus/bytes|parse5|@asamuzakjp|@csstools)/)"
+      "node_modules/(?!(nanoid|@exodus/bytes|parse5|@asamuzakjp|@csstools|entities)/)"
     ],
     "transform": {
       "^.+\\.[jt]s$": "babel-jest",
@@ -109,7 +109,7 @@
     "@vitejs/plugin-react": "^5.1.2",
     "body-parser": "^2.2.0",
     "classnames": "^2.5.1",
-    "codemirror-5-themes": "^1.2.0",
+    "codemirror-5-themes": "^1.3.0",
     "cookie-parser": "^1.4.7",
     "core-js": "^3.49.0",
     "cors": "^2.8.5",
