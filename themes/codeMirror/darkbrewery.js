@@ -54,10 +54,10 @@ export default EditorView.theme({
 	'.cm-activeLine' : {
 		backgroundColor : '#868c9323',
 	},
-	'.cm-selectionBackground ' : {
+	'.cm-selectionBackground' : {
 		backgroundColor : '#d7d4f0',
 	},
-	'.cm-focused .cm-selectionBackground ' : {
+	'.cm-focused .cm-selectionBackground' : {
 		backgroundColor : '#d7d4f0 !important',
 	},
 	'.cm-pageLine' : {
