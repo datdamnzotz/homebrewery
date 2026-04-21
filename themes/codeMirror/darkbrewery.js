@@ -57,6 +57,9 @@ export default EditorView.theme({
 	'.cm-selectionBackground ' : {
 		backgroundColor : '#d7d4f0',
 	},
+	'.cm-focused .cm-selectionBackground ' : {
+		backgroundColor : '#d7d4f0',
+	},
 	'.cm-pageLine' : {
 		backgroundColor : '#7ca97c',
 		color           : '#000',
