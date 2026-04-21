@@ -101,7 +101,7 @@ const SharePage = (props)=>{
 								{currentBrewRendererPageNum > 1 &&
 									<Nav.item
 										color='blue'
-										icon='fas fa-link'
+										icon='fas fa-hashtag'
 										onClick={()=>{navigator.clipboard.writeText(`${global.config.baseUrl}/share/${processShareId()}#p${currentBrewRendererPageNum}`);}}>
 										copy url (page {currentBrewRendererPageNum})
 									</Nav.item>}
