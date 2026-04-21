@@ -13,6 +13,8 @@ import {
 	ViewPlugin,
 	drawSelection,
 	dropCursor,
+	rectangularSelection,
+	crosshairCursor,
 } from '@codemirror/view';
 import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
 import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
@@ -232,6 +234,8 @@ const CodeEditor = forwardRef(
 
 				//multiple cursors and selections
 				drawSelection(),
+				rectangularSelection,
+				crosshairCursor,
 				EditorState.allowMultipleSelections.of(true),
 				dropCursor(),
 				programmaticCursorLineField,
