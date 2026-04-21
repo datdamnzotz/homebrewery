@@ -234,8 +234,8 @@ const CodeEditor = forwardRef(
 
 				//multiple cursors and selections
 				drawSelection(),
-				rectangularSelection,
-				crosshairCursor,
+				rectangularSelection(),
+				crosshairCursor(),
 				EditorState.allowMultipleSelections.of(true),
 				dropCursor(),
 				programmaticCursorLineField,
