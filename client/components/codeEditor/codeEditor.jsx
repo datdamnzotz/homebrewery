@@ -28,13 +28,15 @@ import { closeBrackets } from '@codemirror/autocomplete';
 
 const autoCloseBrackets = closeBrackets({ brackets: ['()', '[]', '{{}}'] });
 
-import * as themesImport from '@uiw/codemirror-themes-all';
 import defaultCM5Theme from '@themes/codeMirror/default.js';
 import darkbrewery from '@themes/codeMirror/darkbrewery.js';
+import cm5Themes from 'codemirror-5-themes';
 
-const themes = { default: defaultCM5Theme, darkbrewery, ...themesImport };
+const themes = { default: defaultCM5Theme, ...cm5Themes, darkbrewery };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
+
+console.log(themes);
 
 import { generalKeymap, markdownKeymap } from './customKeyMaps.js';
 import foldOnPages from './customFolding.js';
