@@ -188,13 +188,13 @@ const newPage = (view)=>{
 	return true;
 };
 
-export const generalKeymap = keymap.of([
+export const generalKeymap = Prec.high(keymap.of([
 	{ key: 'Tab', run: indentMore },
 	{ key: 'Mod-z', run: undo }, //i think it may be unnecessary
 	{ key: 'Mod-Shift-z', run: redo },
 	{ key: 'Mod-y', run: redo },
 	{ key: 'Mod-d', run: deleteLine},
-]);
+]));
 
 export const markdownKeymap = Prec.highest(keymap.of([
 	//{ key: 'Shift-Tab', run: indentMore },
