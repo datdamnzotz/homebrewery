@@ -125,8 +125,6 @@ export function tokenizeCustomMarkdown(text) {
 				from : offset,
 				to   : offset + desc.length,
 			});
-
-			return;
 		}
 
 		//  --- multiline def list ---
