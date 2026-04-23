@@ -29,13 +29,20 @@ import cm5Themes from 'codemirror-5-themes';
 
 const themes = { default: defaultCM5Theme, ...cm5Themes, darkbrewery };
 
-const EditorThemes = Object.entries(themes)
+const themeNames = Object.entries(themes)
   .filter(([name, value]) =>
     Array.isArray(value) &&
     !name.endsWith('Init') &&
     !name.endsWith('Style')
   )
   .map(([name]) => name);
+
+const EditorThemes = [
+  'default',
+  ...themeNames
+    .filter(name => name !== 'default')
+    .sort((a, b) => a.localeCompare(b))
+];
 
 const execute = function(val, props){
 	if(_.isFunction(val)) return val(props);
