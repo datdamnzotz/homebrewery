@@ -13,6 +13,8 @@ import {
 	ViewPlugin,
 	drawSelection,
 	dropCursor,
+	rectangularSelection,
+	crosshairCursor,
 } from '@codemirror/view';
 import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
 import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
@@ -28,13 +30,15 @@ import { closeBrackets } from '@codemirror/autocomplete';
 
 const autoCloseBrackets = closeBrackets({ brackets: ['()', '[]', '{{}}'] });
 
-import * as themesImport from '@uiw/codemirror-themes-all';
 import defaultCM5Theme from '@themes/codeMirror/default.js';
 import darkbrewery from '@themes/codeMirror/darkbrewery.js';
+import cm5Themes from 'codemirror-5-themes';
 
-const themes = { default: defaultCM5Theme, darkbrewery, ...themesImport };
+const themes = { default: defaultCM5Theme, ...cm5Themes, darkbrewery };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
+
+console.log(themes);
 
 import { generalKeymap, markdownKeymap } from './customKeyMaps.js';
 import foldOnPages from './customFolding.js';
@@ -230,6 +234,8 @@ const CodeEditor = forwardRef(
 
 				//multiple cursors and selections
 				drawSelection(),
+				rectangularSelection(),
+				crosshairCursor(),
 				EditorState.allowMultipleSelections.of(true),
 				dropCursor(),
 				programmaticCursorLineField,
