@@ -121,7 +121,15 @@ const EditPage = (props)=>{
 		if(autoSaveEnabled) trySave(false, hasChange);
 	}, [currentBrew]);
 
+	const didMount = useRef(false);
+
 	useEffect(()=>{
+		console.log('savegoogle has changed');
+		if (!didMount.current) {
+        	didMount.current = true;
+        	return;
+    	}
+
 		trySave(true);
 	}, [saveGoogle]);
 
