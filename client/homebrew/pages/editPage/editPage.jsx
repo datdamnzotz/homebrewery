@@ -124,7 +124,6 @@ const EditPage = (props)=>{
 	const didMount = useRef(false);
 
 	useEffect(()=>{
-		console.log('savegoogle has changed');
 		if (!didMount.current) {
         	didMount.current = true;
         	return;
