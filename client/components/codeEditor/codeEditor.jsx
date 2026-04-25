@@ -38,8 +38,6 @@ const themes = { default: defaultCM5Theme, ...cm5Themes, darkbrewery };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
 
-console.log(themes);
-
 import { generalKeymap, markdownKeymap } from './customKeyMaps.js';
 import foldOnPages from './customFolding.js';
 import { customHighlightStyle, tokenizeCustomMarkdown, tokenizeCustomCSS } from './customHighlight.js';
