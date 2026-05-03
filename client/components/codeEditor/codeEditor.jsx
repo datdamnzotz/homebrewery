@@ -156,6 +156,7 @@ const CodeEditor = forwardRef(
 		const pageMap = useRef([]);
 
 		const recomputePages = (doc)=>{
+			if (tab !== 'brewText') return;
 			const pages = [0];
 			const text = doc.toString();
 			let offset = 0;
@@ -184,7 +185,7 @@ const CodeEditor = forwardRef(
 		const createExtensions = ({ onChange, language, editorTheme })=>{
 			const setEventListeners = EditorView.updateListener.of((update)=>{
 				if(update.docChanged) {
-					tab === 'brewText' && recomputePages(update.state.doc);
+					recomputePages(update.state.doc);
 					onChange(update.state.doc.toString());
 				}
 				if(update.selectionSet) {
@@ -250,7 +251,7 @@ const CodeEditor = forwardRef(
 				extensions : createExtensions({ onChange, language, editorTheme }),
 			});
 
-			tab === 'brewText' && recomputePages(state.doc);
+			recomputePages(state.doc);
 
 			viewRef.current = new EditorView({
 				state,
