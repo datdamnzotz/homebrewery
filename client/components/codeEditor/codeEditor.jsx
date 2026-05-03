@@ -17,8 +17,7 @@ import {
 	crosshairCursor,
 } from '@codemirror/view';
 import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
-import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, syntaxHighlighting } from '@codemirror/language';
-import { foldEffect } from '@codemirror/language';
+import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, foldEffect, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
 import { css } from '@codemirror/lang-css';
@@ -37,8 +36,6 @@ import cm5Themes from 'codemirror-5-themes';
 const themes = { default: defaultCM5Theme, ...cm5Themes, darkbrewery };
 const themeCompartment = new Compartment();
 const highlightCompartment = new Compartment();
-
-console.log(themes);
 
 import { generalKeymap, markdownKeymap } from './customKeyMaps.js';
 import foldOnPages from './customFolding.js';
