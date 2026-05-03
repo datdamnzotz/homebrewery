@@ -148,12 +148,13 @@ const CodeEditor = forwardRef(
 		const editorRef = useRef(null);
 		const viewRef = useRef(null);
 		const docsRef = useRef({});
+		const tabRef = useRef(tab);
 		const prevTabRef = useRef(tab);
-
+		const scrollRef = useRef({});
 		const pageMap = useRef([]);
 
 		const recomputePages = (doc)=>{
-			if (tab !== 'brewText') return;
+			if(tab !== 'brewText') return;
 			const pages = [0];
 			const text = doc.toString();
 			let offset = 0;
@@ -265,11 +266,10 @@ const CodeEditor = forwardRef(
 				ticking = true;
 				requestAnimationFrame(()=>{
 					const top = view.scrollDOM.scrollTop;
+					scrollRef.current[tabRef.current] = top;
 					const block = view.lineBlockAtHeight(top);
-
-					const page = findPageFromPos(block.from); // CHANGED
+					const page = findPageFromPos(block.from);
 					onViewChange(page);
-
 					ticking = false;
 				});
 			};
@@ -288,6 +288,7 @@ const CodeEditor = forwardRef(
 			const view = viewRef.current;
 			if(!view) return;
 
+			tabRef.current = tab;
 			const prevTab = prevTabRef.current;
 
 			if(prevTab !== tab) {
@@ -303,6 +304,15 @@ const CodeEditor = forwardRef(
 				}
 
 				view.setState(nextState);
+
+				const savedScroll = scrollRef.current[tab];
+				
+				if(savedScroll != null) {
+					requestAnimationFrame(()=>{
+						view.scrollDOM.scrollTop = savedScroll;
+					});
+				}
+
 				prevTabRef.current = tab;
 			}
 			view.focus();
