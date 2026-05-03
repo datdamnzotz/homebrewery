@@ -184,7 +184,7 @@ const CodeEditor = forwardRef(
 		const createExtensions = ({ onChange, language, editorTheme })=>{
 			const setEventListeners = EditorView.updateListener.of((update)=>{
 				if(update.docChanged) {
-					recomputePages(update.state.doc);
+					tab === 'brewText' && recomputePages(update.state.doc);
 					onChange(update.state.doc.toString());
 				}
 				if(update.selectionSet) {
@@ -250,7 +250,7 @@ const CodeEditor = forwardRef(
 				extensions : createExtensions({ onChange, language, editorTheme }),
 			});
 
-			recomputePages(state.doc);
+			tab === 'brewText' && recomputePages(state.doc);
 
 			viewRef.current = new EditorView({
 				state,
