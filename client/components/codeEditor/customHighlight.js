@@ -185,7 +185,6 @@ export function tokenizeCustomMarkdown(text) {
 			const injectionRegex = /(?:^|[^{\n])({(?=((?:[:=](?:"[\w,\-()#%. ]*"|[\w\-()#%.]*)|[^"':={}\s]*)*))\2})/gmd;
 			let match;
 			while ((match = injectionRegex.exec(lineText)) !== null) {
-				console.log(match[2]);
 				tokens.push({
 					line : lineNumber,
 					from : match.indices[1][0],
