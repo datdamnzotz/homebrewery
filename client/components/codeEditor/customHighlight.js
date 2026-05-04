@@ -16,6 +16,7 @@ const customTags = {
 	definitionTerm  : 'definitionTerm', // .cm-definitionTerm
 	definitionDesc  : 'definitionDesc', // .cm-definitionDesc
 	definitionColon : 'definitionColon', // .cm-definitionColon
+	strikethrough   : 'strikethrough', // .cm-strikethrough
 
 	//CSS
 
@@ -78,6 +79,23 @@ export function tokenizeCustomMarkdown(text) {
 					'^',
 					Math.max(startIndex + 1, superRegex.lastIndex || 0, subRegex.lastIndex || 0),
 				);
+			}
+		}
+
+		// --- Strikethrough ---
+		if(/\~/.test(lineText)) {
+			const strikethroughRegex = /~(?!\s)(.+?)(?<!\s)~/g;
+
+			let match = strikethroughRegex.exec(lineText);
+			let type = customTags.strikethrough;
+
+			if(match) {
+				tokens.push({
+					line : lineNumber,
+					type,
+					from : match.index,
+					to   : match.index + match[0].length,
+				});
 			}
 		}
 
