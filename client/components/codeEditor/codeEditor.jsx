@@ -17,7 +17,7 @@ import {
 	crosshairCursor,
 } from '@codemirror/view';
 import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
-import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, foldEffect, syntaxHighlighting } from '@codemirror/language';
+import { foldAll as foldAllCmd, unfoldAll as unfoldAllCmd, foldGutter, foldKeymap, foldEffect, foldState, syntaxHighlighting } from '@codemirror/language';
 import { defaultKeymap, history, undo, redo, undoDepth, redoDepth } from '@codemirror/commands';
 import { languages } from '@codemirror/language-data';
 import { css } from '@codemirror/lang-css';
@@ -151,6 +151,7 @@ const CodeEditor = forwardRef(
 		const tabRef = useRef(tab);
 		const prevTabRef = useRef(tab);
 		const scrollRef = useRef({});
+		const foldsRef = useRef({});
 		const pageMap = useRef([]);
 
 		const recomputePages = (doc)=>{
@@ -178,6 +179,14 @@ const CodeEditor = forwardRef(
 			}
 
 			return page;
+		};
+
+		const getFoldRanges = (state) => {
+			const folds = [];
+			state.field(foldState, false)?.between(0, state.doc.length, (from, to) => {
+				folds.push({ from, to });
+			});
+			return folds;
 		};
 
 		const createExtensions = ({ onChange, language, editorTheme })=>{
@@ -284,12 +293,22 @@ const CodeEditor = forwardRef(
 			};
 		}, []);
 
+		const restoreFolds = (view, folds) => {
+  			if (!folds?.length) return;
+
+  			view.dispatch({
+    			effects: folds.map(f => foldEffect.of(f))
+  			});
+		};
+
 		useEffect(()=>{
 			const view = viewRef.current;
 			if(!view) return;
 
 			tabRef.current = tab;
 			const prevTab = prevTabRef.current;
+
+			foldsRef.current[prevTab] = getFoldRanges(view.state);
 
 			if(prevTab !== tab) {
 				docsRef.current[prevTab] = view.state;
@@ -304,6 +323,7 @@ const CodeEditor = forwardRef(
 				}
 
 				view.setState(nextState);
+				restoreFolds(view, foldsRef.current[tab]);
 
 				const savedScroll = scrollRef.current[tab];
 				
