@@ -181,9 +181,9 @@ const CodeEditor = forwardRef(
 			return page;
 		};
 
-		const getFoldRanges = (state) => {
+		const getFoldRanges = (state)=>{
 			const folds = [];
-			state.field(foldState, false)?.between(0, state.doc.length, (from, to) => {
+			state.field(foldState, false)?.between(0, state.doc.length, (from, to)=>{
 				folds.push({ from, to });
 			});
 			return folds;
@@ -293,11 +293,11 @@ const CodeEditor = forwardRef(
 			};
 		}, []);
 
-		const restoreFolds = (view, folds) => {
-  			if (!folds?.length) return;
+		const restoreFolds = (view, folds)=>{
+  			if(!folds?.length) return;
 
   			view.dispatch({
-    			effects: folds.map(f => foldEffect.of(f))
+    			effects : folds.map((f)=>foldEffect.of(f))
   			});
 		};
 
@@ -326,7 +326,7 @@ const CodeEditor = forwardRef(
 				restoreFolds(view, foldsRef.current[tab]);
 
 				const savedScroll = scrollRef.current[tab];
-				
+
 				if(savedScroll != null) {
 					requestAnimationFrame(()=>{
 						view.scrollDOM.scrollTop = savedScroll;
