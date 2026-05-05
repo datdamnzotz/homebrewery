@@ -90,7 +90,7 @@ const EditPage = (props)=>{
 
 		const handleControlKeys = (e)=>{
 			if(!(e.ctrlKey || e.metaKey)) return;
-			if(e.keyCode === 83) trySaveRef.current(true);
+			if(e.keyCode === 83) trySaveRef.current(true, true, saveGoogle);
 			if(e.keyCode === 80) printCurrentBrew();
 			if([83, 80].includes(e.keyCode)) {
 				e.stopPropagation();
@@ -118,12 +118,8 @@ const EditPage = (props)=>{
 		const hasChange = !_.isEqual(currentBrew, lastSavedBrew.current);
 		setUnsavedChanges(hasChange);
 
-		if(autoSaveEnabled) trySave(false, hasChange);
+		if(autoSaveEnabled) trySave(false, hasChange, saveGoogle);
 	}, [currentBrew]);
-
-	useEffect(()=>{
-		trySave(true);
-	}, [saveGoogle]);
 
 	const handleSplitMove = ()=>{
 		editorRef.current?.update();
@@ -183,11 +179,13 @@ const EditPage = (props)=>{
 	};
 
 	const toggleGoogleStorage = ()=>{
+		const newSaveGoogle = !saveGoogle;
 		setSaveGoogle((prev)=>!prev);
 		setError(null);
+		trySave(true, true, newSaveGoogle);
 	};
 
-	const trySave = (immediate = false, hasChanges = true)=>{
+	const trySave = (immediate = false, hasChanges = true, saveToGoogle = false)=>{
 		clearTimeout(saveTimeout.current);
 		if(isSaving) return;
 		if(!hasChanges && !immediate) return;
@@ -196,7 +194,7 @@ const EditPage = (props)=>{
 		saveTimeout.current = setTimeout(async ()=>{
 			setIsSaving(true);
 			setError(null);
-			await save(currentBrew, saveGoogle)
+			await save(currentBrew, saveToGoogle)
 			.catch((err)=>{
 				setError(err);
 			});
@@ -314,7 +312,7 @@ const EditPage = (props)=>{
 
 		// #3 - Unsaved changes exist, click to save, show SAVE NOW
 		if(unsavedChanges)
-			return <Nav.item className='save' onClick={()=>trySave(true)} color='blue' icon='fas fa-save'>save now</Nav.item>;
+			return <Nav.item className='save' onClick={()=>trySave(true, true, saveGoogle)} color='blue' icon='fas fa-save'>save now</Nav.item>;
 
 		// #4 - No unsaved changes, autosave is ON, show AUTO-SAVED
 		if(autoSaveEnabled)
